@@ -1,0 +1,166 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+### Core Principles
+
+- Write clean, maintainable, scalable, and robust code.
+- Prefer functional and declarative programming patterns; avoid classes.
+- Favor iteration and modularization over code duplication.
+- Prioritize error handling, edge cases, and validation upfront with early returns and guard clauses.
+- Ensure code is secure, performant, and accessible (a11y).
+- Follow official documentation and established community best practices.
+- Optimize for Web Vitals (LCP, CLS, FID).
+
+### Code Style and Structure
+- Use 2 space indentation.
+- Use single quotes for strings (except to avoid escaping).
+- Omit semicolons (unless required for disambiguation).
+- Use strict equality (`===`).
+- Use curly braces for multi-line conditional statements.
+- Keep `else` statements on the same line as the closing curly brace.
+- Handle error parameters in callbacks.
+- Limit line length (e.g., 80 characters, though modern tools often allow more).
+- Structure files with the main exported component/page first, followed by subcomponents, helpers, static content, and types/interfaces.
+- Use lowercase with dashes for directory names (e.g., `components/auth-wizard`).
+
+### Naming Conventions
+
+- **PascalCase:** Components, Type Definitions, Interfaces.
+- **kebab-case:** Directory Names, File Names (e.g., `user-profile.tsx`).
+- **camelCase:** Variables, Functions, Methods, Hooks, Properties, Props.
+- **UPPERCASE:** Environment Variables, Constants, Global Configurations.
+- Prefix event handlers with `handle` (e.g., `handleClick`).
+- Prefix boolean variables with auxiliary verbs (`is`, `has`, `can`, `should`, `does`).
+- Prefix custom hooks with `use` (e.g., `useAuth`).
+- Use complete words over abbreviations (exceptions: `err`, `req`, `res`, `props`, `ref`).
+
+### TypeScript Usage
+
+- Use TypeScript for all code; enable strict mode.
+- Prefer interfaces over types for object shapes (unless using complex type features like mapped types or union type patterns, or in specific contexts like Payload CMS where types are preferred).
+- Avoid `any` and `unknown` types; use specific types.
+- Avoid type assertions (`as`, `!`) unless necessary.
+- Utilize TypeScript utility types (Partial, Pick, Omit) and generics.
+- Use Zod for schema validation and type inference.
+- Avoid enums; use literal types or maps instead.
+
+### React/Next.js Best Practices
+
+- Use functional components; prefer the `function` keyword for component definitions and pure functions.
+- Use declarative JSX.
+- Implement proper component composition.
+- Default to React Server Components (RSC) in the Next.js App Router.
+- Minimize `'use client'` usage; use only when necessary for browser APIs, state management, event listeners, or client-only libraries.
+- Utilize built-in Next.js components (`Image`, `Link`, `Script`, `Head`).
+- Implement proper loading states (using `loading.tsx`) and error boundaries (`error.tsx`, `global-error.tsx`).
+- Use `Suspense` with fallbacks for client components.
+- Implement dynamic imports for code splitting.
+- Use `useCallback` and `useMemo` for memoization of functions and expensive computations.
+- Avoid inline function definitions in JSX that cause unnecessary re-renders.
+- Ensure proper `key` props in lists.
+- Use URL search parameters (`nuqs` recommended) for server state management.
+- Use Next-safe-action for type-safe server actions with Zod validation.
+- Model expected server action errors as return values (`useActionState`).
+- Use React Hook Form with Zod for form validation.
+
+### UI and Styling
+
+- Use modern UI frameworks: Tailwind CSS, Shadcn UI, Radix UI,  Magic UI MCP Tool (or Tamagui for cross-platform).
+- Implement responsive design with a mobile-first approach using Tailwind CSS utilities.
+- Use Tailwind's utility-first approach for styling.
+- Avoid the `@apply` directive in Tailwind.
+- Consider using Stylus as CSS Modules for component-specific styles where needed, managing classes within the module file (`.module.styl`).
+- Ensure accessible color contrast ratios.
+- Maintain consistent spacing using Tailwind's default scale or CSS variables.
+- Implement dark mode.
+
+### State Management
+
+- Use `useState` for simple component-level state.
+- Use `useReducer` for complex component state logic.
+- Use `useContext` for intermediate state sharing.
+- Use Zustand or Redux Toolkit (with `createSlice`) for global state management.
+- Use TanStack React Query for data fetching, caching, and synchronization (services should throw user-friendly errors for React Query to catch).
+- Minimize `useEffect` and `setState` usage by favoring derived state and hooks like React Query.
+
+### Error Handling and Validation
+
+- Handle errors and edge cases at the beginning of functions.
+- Use early returns for error conditions to avoid deep nesting.
+- Implement guard clauses to handle preconditions and invalid states.
+- Use custom error types or factories for consistent error handling.
+- Implement proper error logging and user-friendly error messages.
+- Validate user input on both client and server sides (Zod recommended).
+
+### Performance Optimization
+
+- Minimize `'use client'` usage; favor RSC and SSR.
+- Implement code splitting (dynamic imports).
+- Implement lazy loading for non-critical components and images.
+- Optimize images: Use appropriate formats (e.g., WebP), include size data, and use lazy loading.
+- Use memoization (`useCallback`, `useMemo`, `React.memo`) strategically.
+- Implement the preload pattern to prevent data waterfalls in RSC.
+
+### Accessibility (a11y)
+
+- Use semantic HTML for meaningful structure.
+- Apply accurate ARIA attributes and roles where needed.
+- Ensure full keyboard navigation support (`tabindex="0"`).
+- Manage focus order effectively.
+- Ensure accessible color contrast.
+- Use proper heading hierarchy.
+- Provide clear and accessible error feedback.
+
+### Testing
+
+- Write unit, integration, and end-to-end tests.
+- Use Jest and React Testing Library for React components.
+- Follow patterns like Arrange-Act-Assert.
+- Mock external dependencies and API calls.
+- Use snapshot testing selectively.
+
+### Security
+
+- Sanitize user inputs (e.g., using DOMPurify) to prevent XSS and injection attacks.
+- Use environment variables for sensitive configuration.
+- Implement proper authentication and authorization mechanisms.
+- Apply Row Level Security (RLS) in Supabase.
+- Use HTTPS.
+
+### Internationalization (i18n)
+
+- Use libraries like `next-i18next` or `react-intl`.
+- Implement proper locale detection.
+- Use proper number, date, and currency formatting.
+- Implement proper RTL support if necessary.
+
+### Monorepo (Turbo)
+
+- Use Turbo for monorepo management.
+- Ensure packages are isolated and dependencies managed correctly.
+- Use shared configurations.
+- Follow the workspace structure (e.g., `apps`, `packages`).
+
+### Backend/Database (Supabase, MongoDB, Payload CMS, GraphQL)
+
+- Use Supabase client for DB interactions, Auth, Storage, and Edge Functions.
+- Implement Supabase RLS policies.
+- Use GraphQL clients (like Genql) for type-safe API interactions, optimizing queries.
+- Use Payload CMS for backend data management (collections, globals, fields, hooks, endpoints).
+- Design MongoDB schemas with indexing and use aggregation pipelines.
+- Validate data using Zod at the application level.
+
+### AI SDK (Vercel AI SDK)
+
+- Use Vercel AI SDK UI, Core, and RSC/Stream Helpers for chat interfaces.
+- Implement robust error handling, fallbacks, and rate limit handling for AI interactions.
+- Sanitize user messages before sending to AI models.
+- Consider Vercel KV for chat history or rate limiting.
+
+### Documentation
+
+- Use JSDoc comments for functions, components, and types.
+- Document public APIs and complex logic.
+- Add examples where appropriate. 
