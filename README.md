@@ -29,6 +29,7 @@ Kyn is a comprehensive family connection platform designed to bring families clo
 ## Technology Stack
 
 ### Frontend
+
 - **Framework:** Next.js 14 (App Router)
 - **Language:** TypeScript
 - **State Management:** Zustand, React Query
@@ -36,12 +37,14 @@ Kyn is a comprehensive family connection platform designed to bring families clo
 - **Forms:** React Hook Form with Zod validation
 
 ### Backend
+
 - **Database:** Supabase (PostgreSQL)
 - **Authentication:** Supabase Auth
 - **Storage:** Supabase Storage
 - **Serverless Functions:** Next.js API Routes, Server Actions
 
 ### Integrations
+
 - **Email:** Resend API
 - **Maps:** Google Maps API
 - **Weather:** OpenWeather API
@@ -81,6 +84,7 @@ Kyn is a comprehensive family connection platform designed to bring families clo
   - [License](#license)
   - [Kyn App Pitch](#kyn-app-pitch)
   - [Architecture Diagram](#architecture-diagram)
+  - [Developer Progress Checklist](#developer-progress-checklist)
 
 ## Getting Started
 
@@ -244,21 +248,35 @@ This project supports real-time video and audio via LiveKit. To enable LiveKit:
        const room = req.nextUrl.searchParams.get('room')
        const username = req.nextUrl.searchParams.get('username')
        if (!room) {
-         return NextResponse.json({ error: 'Missing "room" query parameter' }, { status: 400 })
+         return NextResponse.json(
+           { error: 'Missing "room" query parameter' },
+           { status: 400 }
+         )
        } else if (!username) {
-         return NextResponse.json({ error: 'Missing "username" query parameter' }, { status: 400 })
+         return NextResponse.json(
+           { error: 'Missing "username" query parameter' },
+           { status: 400 }
+         )
        }
        const apiKey = process.env.LIVEKIT_API_KEY
        const apiSecret = process.env.LIVEKIT_API_SECRET
        const wsUrl = process.env.LIVEKIT_URL
        if (!apiKey || !apiSecret || !wsUrl) {
-         return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 })
+         return NextResponse.json(
+           { error: 'Server misconfigured' },
+           { status: 500 }
+         )
        }
        const at = new AccessToken(apiKey, apiSecret, { identity: username })
-       at.addGrant({ room, roomJoin: true, canPublish: true, canSubscribe: true })
+       at.addGrant({
+         room,
+         roomJoin: true,
+         canPublish: true,
+         canSubscribe: true,
+       })
        return NextResponse.json(
          { token: await at.toJwt() },
-         { headers: { 'Cache-Control': 'no-store' } },
+         { headers: { 'Cache-Control': 'no-store' } }
        )
      }
      ```
@@ -280,19 +298,27 @@ This project supports real-time video and audio via LiveKit. To enable LiveKit:
      export default function Page() {
        const room = 'quickstart-room'
        const name = 'quickstart-user'
-       const [roomInstance] = useState(() => new Room({
-         adaptiveStream: true,
-         dynacast: true,
-       }))
+       const [roomInstance] = useState(
+         () =>
+           new Room({
+             adaptiveStream: true,
+             dynacast: true,
+           })
+       )
        useEffect(() => {
          let mounted = true
          ;(async () => {
            try {
-             const resp = await fetch(`/api/token?room=${room}&username=${name}`)
+             const resp = await fetch(
+               `/api/token?room=${room}&username=${name}`
+             )
              const data = await resp.json()
              if (!mounted) return
              if (data.token) {
-               await roomInstance.connect(process.env.NEXT_PUBLIC_LIVEKIT_URL, data.token)
+               await roomInstance.connect(
+                 process.env.NEXT_PUBLIC_LIVEKIT_URL,
+                 data.token
+               )
              }
            } catch (e) {
              console.error(e)
@@ -305,7 +331,7 @@ This project supports real-time video and audio via LiveKit. To enable LiveKit:
        }, [roomInstance])
        return (
          <RoomContext.Provider value={roomInstance}>
-           <div data-lk-theme='default' style={{ height: '100dvh' }}>
+           <div data-lk-theme="default" style={{ height: '100dvh' }}>
              <MyVideoConference />
              <RoomAudioRenderer />
              <ControlBar />
@@ -319,10 +345,13 @@ This project supports real-time video and audio via LiveKit. To enable LiveKit:
            { source: Track.Source.Camera, withPlaceholder: true },
            { source: Track.Source.ScreenShare, withPlaceholder: false },
          ],
-         { onlySubscribed: false },
+         { onlySubscribed: false }
        )
        return (
-         <GridLayout tracks={tracks} style={{ height: 'calc(100vh - var(--lk-control-bar-height))' }}>
+         <GridLayout
+           tracks={tracks}
+           style={{ height: 'calc(100vh - var(--lk-control-bar-height))' }}
+         >
            <ParticipantTile />
          </GridLayout>
        )
@@ -427,22 +456,22 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 **Key Value Proposition & Features (The 'Why Kyn?'):**
 
-*   **Private & Secure by Design:** Unlike public platforms, Kyn is a walled garden for your family. Your data, your memories, and your conversations are kept private, protected by robust security measures like Row-Level Security.
-*   **All-in-One Family Hub:** Why juggle multiple apps? Kyn brings together everything your family needs:
-    *   A dynamic feed for daily updates and meaningful conversations (no superficial likes!).
-    *   Shared calendars and event planning.
-    *   Collaborative photo and video albums.
-    *   A structured recipe box for sharing culinary traditions.
-    *   Family-friendly games and polls for fun and collective decisions.
-    *   Task management for shared responsibilities.
-*   **Building and Preserving Your Legacy:** Kyn isn't just about the present; it's about the future.
-    *   Document milestones and achievements.
-    *   Build a dynamic, visual Family Tree.
-    *   Create a Story Vault with recorded audio and video memories.
-    *   Archive photos with smart tagging.
-    *   Optionally, record sensitive family history (with strict privacy controls).
-*   **Connecting Generations:** Designed to be intuitive for everyone, from tech-savvy teens to grandparents. Features like AI-generated newsletters help keep less active members informed and engaged.
-*   **Focus on Meaningful Interaction:** We prioritize conversations and shared experiences. Reactions offer a simple way to show acknowledgement, while threaded replies keep discussions organized.
+- **Private & Secure by Design:** Unlike public platforms, Kyn is a walled garden for your family. Your data, your memories, and your conversations are kept private, protected by robust security measures like Row-Level Security.
+- **All-in-One Family Hub:** Why juggle multiple apps? Kyn brings together everything your family needs:
+  - A dynamic feed for daily updates and meaningful conversations (no superficial likes!).
+  - Shared calendars and event planning.
+  - Collaborative photo and video albums.
+  - A structured recipe box for sharing culinary traditions.
+  - Family-friendly games and polls for fun and collective decisions.
+  - Task management for shared responsibilities.
+- **Building and Preserving Your Legacy:** Kyn isn't just about the present; it's about the future.
+  - Document milestones and achievements.
+  - Build a dynamic, visual Family Tree.
+  - Create a Story Vault with recorded audio and video memories.
+  - Archive photos with smart tagging.
+  - Optionally, record sensitive family history (with strict privacy controls).
+- **Connecting Generations:** Designed to be intuitive for everyone, from tech-savvy teens to grandparents. Features like AI-generated newsletters help keep less active members informed and engaged.
+- **Focus on Meaningful Interaction:** We prioritize conversations and shared experiences. Reactions offer a simple way to show acknowledgement, while threaded replies keep discussions organized.
 
 **The Opportunity:**
 
@@ -458,7 +487,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-
 ## Architecture Diagram
 
 The following diagram illustrates the complete architecture of the Kyn application, showing how different components interact with each other and with external services.
@@ -470,7 +498,7 @@ graph TD
     NextJS["Next.js Application"]
     Supabase["Supabase Backend"]
     ExternalServices["External Services"]
-    
+
     %% Client Components
     subgraph "Frontend Layer"
         Pages["Pages (App Router)"]
@@ -478,21 +506,21 @@ graph TD
         ClientComponents["React Client Components"]
         Hooks["Custom Hooks"]
     end
-    
+
     %% State Management
     subgraph "State Management"
         ZustandStores["Zustand Stores"]
         ReactQuery["React Query"]
         LocalState["Component Local State"]
     end
-    
+
     %% Server Components
     subgraph "Server Layer"
         ServerActions["Server Actions"]
         APIRoutes["API Routes"]
         Middleware["Next.js Middleware"]
     end
-    
+
     %% Supabase Services
     subgraph "Supabase Services"
         Auth["Authentication"]
@@ -500,7 +528,7 @@ graph TD
         Storage["File Storage"]
         RLS["Row Level Security"]
     end
-    
+
     %% External Integrations
     subgraph "External Integrations"
         Stripe["Stripe Payments"]
@@ -510,7 +538,7 @@ graph TD
         GoogleMaps["Google Maps API"]
         GeminiAI["Gemini AI"]
     end
-    
+
     %% Database Tables
     subgraph "Database Schema"
         Profiles["Profiles"]
@@ -530,7 +558,7 @@ graph TD
         Stories["Stories"]
         MedicalNotes["Medical Notes"]
     end
-    
+
     %% Utility Libraries
     subgraph "Utility Libraries"
         Utils["Utility Functions"]
@@ -540,28 +568,28 @@ graph TD
         ErrorHandling["Error Handling"]
         Monitoring["Monitoring & Logging"]
     end
-    
+
     %% Connections - Client Flow
     Client --> NextJS
     NextJS --> Pages
     Pages --> ServerComponents
     Pages --> ClientComponents
     ClientComponents --> Hooks
-    
+
     %% State Management Connections
     ClientComponents --> LocalState
     ClientComponents --> ZustandStores
     ClientComponents --> ReactQuery
     Hooks --> ZustandStores
     Hooks --> ReactQuery
-    
+
     %% Server Connections
     ServerComponents --> ServerActions
     ClientComponents --> ServerActions
     ServerComponents --> APIRoutes
     ClientComponents --> APIRoutes
     NextJS --> Middleware
-    
+
     %% Supabase Connections
     ServerActions --> Auth
     ServerActions --> Database
@@ -571,7 +599,7 @@ graph TD
     APIRoutes --> Storage
     Middleware --> Auth
     Database --> RLS
-    
+
     %% Database Schema Connections
     Database --> Profiles
     Database --> Families
@@ -589,7 +617,7 @@ graph TD
     Database --> FamilyTree
     Database --> Stories
     Database --> MedicalNotes
-    
+
     %% External Service Connections
     ServerActions --> ExternalServices
     APIRoutes --> ExternalServices
@@ -599,7 +627,7 @@ graph TD
     ExternalServices --> OpenWeather
     ExternalServices --> GoogleMaps
     ExternalServices --> GeminiAI
-    
+
     %% Utility Connections
     ServerActions --> Utils
     ServerActions --> Services
@@ -613,7 +641,7 @@ graph TD
     ClientComponents --> Utils
     NextJS --> Config
     NextJS --> Monitoring
-    
+
     %% Style Definitions
     classDef frontend fill:#d4f1f9,stroke:#05728f,stroke-width:2px;
     classDef state fill:#ffe6cc,stroke:#d79b00,stroke-width:2px;
@@ -622,7 +650,7 @@ graph TD
     classDef external fill:#fff2cc,stroke:#d6b656,stroke-width:2px;
     classDef database fill:#f8cecc,stroke:#b85450,stroke-width:2px;
     classDef utility fill:#dae8fc,stroke:#6c8ebf,stroke-width:2px;
-    
+
     %% Apply Styles
     class Pages,ServerComponents,ClientComponents,Hooks frontend;
     class ZustandStores,ReactQuery,LocalState state;
@@ -632,4 +660,48 @@ graph TD
     class Profiles,Families,FamilyMembers,Posts,Comments,Tasks,Recipes,Albums,Media,Messages,Events,Polls,Challenges,FamilyTree,Stories,MedicalNotes database;
     class Utils,Services,Config,Validation,ErrorHandling,Monitoring utility;
 
+## Developer Progress Checklist
 
+### ✅ Foundation & Auth
+- [x] Supabase project created and connected
+- [x] Supabase client utilities (browser/server) implemented
+- [x] Supabase Auth (sign up, sign in, sign out) with React Hook Form + Zod
+- [x] Session middleware for SSR/RSC
+- [x] Route protection for authenticated pages
+- [x] Onboarding/profile flow (profile completion after registration)
+- [x] UI polish: loading, error, and success feedback for auth/onboarding
+- [x] Database schema: core tables (profiles, families, posts, comments, etc.)
+- [x] RLS (Row Level Security) enabled and policies for user data
+
+### ⬜️ Core Features (MVP)
+- [ ] Family feed (posts, comments, media)
+- [ ] Family management (create/join family, invite members)
+- [ ] User profile management (edit profile, avatar upload)
+- [ ] Direct messaging (private conversations)
+- [ ] Photo albums (create, view, upload)
+- [ ] Task management (assign, complete tasks)
+- [ ] Events (create, view, RSVP)
+- [ ] Polls & voting
+- [ ] Family tree visualization
+- [ ] Family stories (record, view)
+- [ ] Recipe sharing
+
+### ⬜️ Integrations & Advanced
+- [ ] Video calls (LiveKit integration)
+- [ ] Weather widget (OpenWeather API)
+- [ ] Newsletter generator (AI)
+- [ ] Subscription management (Stripe)
+- [ ] Email notifications (Resend)
+- [ ] Maps/location (Google Maps API)
+
+### ⬜️ Testing & Polish
+- [ ] Unit/integration tests (Jest, React Testing Library)
+- [ ] Error boundaries and global error handling
+- [ ] Accessibility (a11y) audit
+- [ ] Responsive/mobile-first UI polish
+- [ ] Documentation improvements
+
+---
+
+
+```
