@@ -1,59 +1,27 @@
 'use client'
 
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { createClient } from '@/utils/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useOnboarding, OnboardingForm } from '@/hooks/useOnboarding'
 import { motion } from 'framer-motion'
 import AuthCheck from '@/components/auth-check'
 import { LoadingState } from '@/components/loading-state'
-import { EmptyState } from '@/components/empty-state'
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Full name required'),
   avatarUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 })
 
-type ProfileForm = z.infer<typeof profileSchema>
-
 export default function OnboardingPage() {
-  const supabase = createClient()
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<ProfileForm>({
+  } = useForm<OnboardingForm>({
     resolver: zodResolver(profileSchema),
   })
-
-  async function handleProfile(data: ProfileForm) {
-    setLoading(true)
-    setError(null)
-    const { data: userData, error: userError } = await supabase.auth.getUser()
-    if (userError || !userData?.user) {
-      setError('Not authenticated')
-      setLoading(false)
-      return
-    }
-    const { error: upsertError } = await supabase.from('profiles').upsert({
-      user_id: userData.user.id,
-      email: userData.user.email,
-      full_name: data.fullName,
-      avatar_url: data.avatarUrl || null,
-    })
-    if (upsertError) {
-      setError(upsertError.message)
-      setLoading(false)
-      return
-    }
-    router.push('/')
-  }
+  const { loading, error, onSubmit } = useOnboarding()
 
   return (
     <AuthCheck>
@@ -75,7 +43,7 @@ export default function OnboardingPage() {
           <LoadingState message="Saving..." />
         ) : (
           <form
-            onSubmit={handleSubmit(handleProfile)}
+            onSubmit={handleSubmit(onSubmit)}
             className="space-y-6"
             aria-label="Onboarding form"
           >
@@ -90,7 +58,9 @@ export default function OnboardingPage() {
                 {...register('fullName')}
                 className="mt-1 block w-full rounded border border-brand/20 dark:border-brand-accent/30 bg-white/70 dark:bg-brand-dark/60 shadow-sm focus:border-brand-accent focus:ring-brand-accent transition-colors"
                 aria-invalid={!!errors.fullName}
-                aria-describedby={errors.fullName ? 'fullName-error' : undefined}
+                aria-describedby={
+                  errors.fullName ? 'fullName-error' : undefined
+                }
               />
               {errors.fullName && (
                 <p id="fullName-error" className="mt-1 text-xs text-red-600">
@@ -109,7 +79,9 @@ export default function OnboardingPage() {
                 {...register('avatarUrl')}
                 className="mt-1 block w-full rounded border border-brand/20 dark:border-brand-accent/30 bg-white/70 dark:bg-brand-dark/60 shadow-sm focus:border-brand-accent focus:ring-brand-accent transition-colors"
                 aria-invalid={!!errors.avatarUrl}
-                aria-describedby={errors.avatarUrl ? 'avatarUrl-error' : undefined}
+                aria-describedby={
+                  errors.avatarUrl ? 'avatarUrl-error' : undefined
+                }
               />
               {errors.avatarUrl && (
                 <p id="avatarUrl-error" className="mt-1 text-xs text-red-600">
