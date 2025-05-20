@@ -673,10 +673,10 @@ graph TD
 - [x] Database schema: core tables (profiles, families, posts, comments, etc.)
 - [x] RLS (Row Level Security) enabled and policies for user data
 
-### ⬜️ Core Features (MVP)
-- [ ] Family feed (posts, comments, media)
-- [ ] Family management (create/join family, invite members)
-- [ ] User profile management (edit profile, avatar upload)
+### ✅ Core Features (MVP)
+- [x] Family feed (posts, comments, media)
+- [x] Family management (create/join family, invite members)
+- [x] User profile management (edit profile, avatar upload)
 - [ ] Direct messaging (private conversations)
 - [ ] Photo albums (create, view, upload)
 - [ ] Task management (assign, complete tasks)
@@ -685,6 +685,14 @@ graph TD
 - [ ] Family tree visualization
 - [ ] Family stories (record, view)
 - [ ] Recipe sharing
+
+> **Note:** Profile, Family, and Feed features are now implemented and live in the MVP.
+>
+> **However, there is currently no navigation or UI to access these new core features from the main app.**
+> To make these features usable, add navigation links or a dashboard/home page that allows users to access:
+> - Family Feed (`/feed`)
+> - Family Management (`/family`)
+> - User Profile (`/profile`)
 
 ### ⬜️ Integrations & Advanced
 - [ ] Video calls (LiveKit integration)
