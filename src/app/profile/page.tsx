@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
+import { LoadingState } from '@/components/loading-state'
+import { EmptyState } from '@/components/empty-state'
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Name required'),
@@ -85,7 +87,7 @@ export default function ProfilePage() {
   return (
     <div className="max-w-md mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
-      {loading && <div className="text-gray-500">Loading...</div>}
+      {loading && <LoadingState message="Loading profile..." />}
       {error && <div className="text-red-500 mb-2">{error}</div>}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>

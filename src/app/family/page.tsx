@@ -6,6 +6,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import { LoadingState } from '@/components/loading-state'
+import { EmptyState } from '@/components/empty-state'
 
 const familySchema = z.object({
   familyName: z.string().min(2, 'Family name required'),
@@ -36,7 +38,6 @@ interface FamilyMember {
 
 export default function FamilyPage() {
   const supabase = createClient()
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [family, setFamily] = useState<Family | null>(null)
   const [members, setMembers] = useState<FamilyMember[]>([])
@@ -52,7 +53,6 @@ export default function FamilyPage() {
 
   useEffect(() => {
     const fetchFamily = async () => {
-      setLoading(true)
       setError(null)
       const {
         data: { user },
@@ -60,7 +60,6 @@ export default function FamilyPage() {
       } = await supabase.auth.getUser()
       if (userError || !user) {
         setError('Not authenticated')
-        setLoading(false)
         return
       }
       // Get the user's family membership (use maybeSingle for 0/1 row)
@@ -73,13 +72,11 @@ export default function FamilyPage() {
         setError('Could not load family membership')
         setFamily(null)
         setMembers([])
-        setLoading(false)
         return
       }
       if (!member) {
         setFamily(null)
         setMembers([])
-        setLoading(false)
         return
       }
       setFamily(member.families)
@@ -94,20 +91,17 @@ export default function FamilyPage() {
       } else {
         setMembers(allMembers)
       }
-      setLoading(false)
     }
     fetchFamily()
   }, [supabase, reset])
 
   const onCreate = async (values: FamilyForm) => {
     setError(null)
-    setLoading(true)
     const {
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) {
       setError('Not authenticated')
-      setLoading(false)
       return
     }
     // Create family
@@ -118,7 +112,6 @@ export default function FamilyPage() {
       .single()
     if (createError) {
       setError('Failed to create family')
-      setLoading(false)
       return
     }
     // Add user as member
@@ -126,13 +119,11 @@ export default function FamilyPage() {
       .from('family_members')
       .insert({ family_id: newFamily.id, profile_id: user.id, role: 'admin' })
     setFamily(newFamily)
-    setLoading(false)
   }
 
   return (
     <div className="max-w-md mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Family Management</h1>
-      {loading && <div className="text-gray-500">Loading...</div>}
       {error && <div className="text-red-500 mb-2">{error}</div>}
       {!family && (
         <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
@@ -148,7 +139,7 @@ export default function FamilyPage() {
               type="text"
               {...register('familyName')}
               className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
-              disabled={isSubmitting || loading}
+              disabled={isSubmitting}
             />
             {errors.familyName && (
               <p className="text-red-500 text-xs mt-1">
@@ -159,7 +150,7 @@ export default function FamilyPage() {
           <button
             type="submit"
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-            disabled={isSubmitting || loading}
+            disabled={isSubmitting}
           >
             Create Family
           </button>
@@ -173,21 +164,25 @@ export default function FamilyPage() {
           <div>
             <h3 className="font-medium mb-2">Members</h3>
             <ul className="space-y-2">
-              {members.map((m) => (
-                <li key={m.id} className="flex items-center gap-2">
-                  {m.profiles?.avatar_url && (
-                    <Image
-                      src={m.profiles.avatar_url}
-                      alt=""
-                      width={32}
-                      height={32}
-                      className="w-8 h-8 rounded-full"
-                    />
-                  )}
-                  <span>{m.profiles?.full_name || 'Unknown'}</span>
-                  <span className="ml-2 text-xs text-gray-500">({m.role})</span>
-                </li>
-              ))}
+              {members.length === 0 ? (
+                <EmptyState message="No members yet." />
+              ) : (
+                members.map((m) => (
+                  <li key={m.id} className="flex items-center gap-2">
+                    {m.profiles?.avatar_url && (
+                      <Image
+                        src={m.profiles.avatar_url}
+                        alt=""
+                        width={32}
+                        height={32}
+                        className="w-8 h-8 rounded-full"
+                      />
+                    )}
+                    <span>{m.profiles?.full_name || 'Unknown'}</span>
+                    <span className="ml-2 text-xs text-gray-500">({m.role})</span>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
         </div>
