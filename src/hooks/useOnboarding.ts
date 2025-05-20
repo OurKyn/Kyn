@@ -24,7 +24,7 @@ export function useOnboarding() {
     }
     const { error: upsertError } = await supabase.from('profiles').upsert({
       user_id: userData.user.id,
-      email: userData.user.email,
+      email: (userData.user.email ?? '').toLowerCase(),
       full_name: data.fullName,
       avatar_url: data.avatarUrl || null,
     })

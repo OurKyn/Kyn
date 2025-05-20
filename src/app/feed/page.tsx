@@ -8,6 +8,7 @@ import { LoadingState } from '@/components/loading-state'
 import { EmptyState } from '@/components/empty-state'
 import Image from 'next/image'
 import { z } from 'zod'
+import { useFamilyContext } from '@/context/family-context'
 
 const postSchema = z.object({
   content: z.string().min(1, 'Post cannot be empty'),
@@ -16,6 +17,9 @@ const postSchema = z.object({
 type PostForm = z.infer<typeof postSchema>
 
 export default function FeedPage() {
+  // Use selectedFamilyId from context
+  const { selectedFamilyId } = useFamilyContext()
+
   const {
     register,
     handleSubmit,
@@ -35,7 +39,7 @@ export default function FeedPage() {
     onPost,
     handleCommentInput,
     onComment,
-  } = useFeed()
+  } = useFeed(selectedFamilyId)
 
   return (
     <div className="max-w-2xl mx-auto py-8">

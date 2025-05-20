@@ -1,7 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { UserIcon, UsersIcon, HomeIcon } from '@heroicons/react/24/outline'
+import {
+  UserIcon,
+  UsersIcon,
+  HomeIcon,
+  LinkIcon,
+} from '@heroicons/react/24/outline'
 
 export default function DashboardPage() {
   return (
@@ -15,16 +20,40 @@ export default function DashboardPage() {
           description="See updates, posts, and media from your family."
         />
         <DashboardCard
+          href="/messages"
+          icon={<UsersIcon className="h-10 w-10 text-pink-600" />}
+          title="Direct Messages"
+          description="Send private messages to your family members."
+        />
+        <DashboardCard
           href="/family"
           icon={<UsersIcon className="h-10 w-10 text-green-600" />}
           title="Family Management"
           description="Create or join a family, invite and manage members."
         />
         <DashboardCard
+          href="/join"
+          icon={<LinkIcon className="h-10 w-10 text-yellow-500" />}
+          title="Join a Family"
+          description="Join a family using an invite password or QR code."
+        />
+        <DashboardCard
           href="/profile"
           icon={<UserIcon className="h-10 w-10 text-purple-600" />}
           title="Your Profile"
           description="Edit your profile and avatar."
+        />
+        <DashboardCard
+          href="/albums"
+          icon={
+            <img
+              src="/icons/photo-album.svg"
+              alt="Albums"
+              className="h-10 w-10 text-pink-500"
+            />
+          }
+          title="Photo Albums"
+          description="Create, view, and upload family photo albums."
         />
       </div>
     </main>

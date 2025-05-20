@@ -1,7 +1,7 @@
-import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { z } from 'zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 
 const commentSchema = z.object({
   content: z.string().min(1, 'Comment cannot be empty'),
@@ -21,7 +21,7 @@ export interface Comment {
   profiles: Profile
 }
 
-export function useFeed() {
+export function useFeed(familyId?: string | null) {
   const supabase = createClient()
   const queryClient = useQueryClient()
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
@@ -63,7 +63,8 @@ export function useFeed() {
   })
   const profile = profileQuery.data
 
-  // Get family membership
+  // Get family membership (for role, but not for familyId)
+  // Only used if familyId is not provided
   const memberQuery = useQuery({
     queryKey: ['family', profile?.id],
     queryFn: async () => {
@@ -78,41 +79,88 @@ export function useFeed() {
       // Pick the most recently joined family
       return members[0]
     },
-    enabled: !!profile,
+    enabled: !!profile && !familyId,
   })
   const member = memberQuery.data
 
+  // Use the provided familyId, or fallback to the most recent membership
+  const activeFamilyId = familyId || member?.family_id
+
+  // Realtime subscription for posts/comments
+  useEffect(() => {
+    if (!activeFamilyId) return
+    const channel = supabase
+      .channel(`family_feed_${activeFamilyId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'posts',
+          filter: `family_id=eq.${activeFamilyId}`,
+        },
+        (payload) => {
+          // Only show toast if the new post is from another user
+          if (
+            payload.eventType === 'INSERT' &&
+            profile?.id &&
+            payload.new.author_id !== profile.id
+          ) {
+            toast('New post', {
+              description: payload.new.content,
+            })
+          }
+          queryClient.invalidateQueries({ queryKey: ['posts', activeFamilyId] })
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'comments',
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['posts', activeFamilyId] })
+        }
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, activeFamilyId, queryClient, profile?.id])
+
   // Get posts
   const postsQuery = useQuery({
-    queryKey: ['posts', member?.family_id],
+    queryKey: ['posts', activeFamilyId],
     queryFn: async () => {
-      if (!member?.family_id) throw new Error('No family ID')
+      if (!activeFamilyId) throw new Error('No family ID')
       const { data, error } = await supabase
         .from('posts')
         .select(
           '*, profiles(full_name, avatar_url), comments(id, content, created_at, author_id, profiles(full_name, avatar_url))'
         )
-        .eq('family_id', member.family_id)
+        .eq('family_id', activeFamilyId)
         .order('created_at', { ascending: false })
       if (error) throw new Error('Failed to fetch posts')
       return data
     },
-    enabled: !!member?.family_id,
+    enabled: !!activeFamilyId,
   })
   const posts = postsQuery.data
 
   // Post a new post
   const onPost = async (values: { content: string }, resetForm: () => void) => {
-    if (!user || !member?.family_id || !profile?.id)
+    if (!user || !activeFamilyId || !profile?.id)
       throw new Error('Not authenticated or not in a family')
     const { error: postError } = await supabase.from('posts').insert({
-      family_id: member.family_id,
+      family_id: activeFamilyId,
       author_id: profile.id,
       content: values.content,
     })
     if (postError) throw new Error('Failed to post')
     resetForm()
-    queryClient.invalidateQueries({ queryKey: ['posts', member.family_id] })
+    queryClient.invalidateQueries({ queryKey: ['posts', activeFamilyId] })
   }
 
   // Handle comment input
@@ -148,14 +196,16 @@ export function useFeed() {
       setCommentErrors((prev) => ({ ...prev, [postId]: 'Failed to comment' }))
     } else {
       setCommentInputs((prev) => ({ ...prev, [postId]: '' }))
-      queryClient.invalidateQueries({ queryKey: ['posts', member?.family_id] })
+      queryClient.invalidateQueries({ queryKey: ['posts', activeFamilyId] })
     }
     setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
   }
 
   return {
     loading:
-      postsQuery.isLoading || memberQuery.isLoading || userQuery.isLoading,
+      postsQuery.isLoading ||
+      (activeFamilyId ? false : true) ||
+      userQuery.isLoading,
     error: postsQuery.error || memberQuery.error || userQuery.error,
     posts,
     commentInputs,

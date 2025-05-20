@@ -84,7 +84,6 @@ Kyn is a comprehensive family connection platform designed to bring families clo
   - [License](#license)
   - [Kyn App Pitch](#kyn-app-pitch)
   - [Architecture Diagram](#architecture-diagram)
-  - [Developer Progress Checklist](#developer-progress-checklist)
 
 ## Getting Started
 
@@ -677,7 +676,7 @@ graph TD
 - [x] Family feed (posts, comments, media)
 - [x] Family management (create/join family, invite members)
 - [x] User profile management (edit profile, avatar upload)
-- [ ] Direct messaging (private conversations)
+- [x] Direct messaging (private conversations)
 - [ ] Photo albums (create, view, upload)
 - [ ] Task management (assign, complete tasks)
 - [ ] Events (create, view, RSVP)
