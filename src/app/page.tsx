@@ -5,7 +5,7 @@ import { UserIcon, UsersIcon, HomeIcon } from '@heroicons/react/24/outline'
 
 export default function DashboardPage() {
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
+    <main className="min-h-screen flex flex-col items-center justify-center">
       <h1 className="text-4xl font-bold mb-10 text-gray-800">Kyn Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
         <DashboardCard

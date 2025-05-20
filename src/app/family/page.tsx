@@ -51,7 +51,7 @@ export default function FamilyPage() {
   })
 
   useEffect(() => {
-    async function fetchFamily() {
+    const fetchFamily = async () => {
       setLoading(true)
       setError(null)
       const {

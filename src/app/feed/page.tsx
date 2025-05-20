@@ -1,52 +1,20 @@
 'use client'
 
-import { createClient } from '@/utils/supabase/client'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useFeed } from '@/hooks/useFeed'
+import { LoadingState } from '@/components/loading-state'
+import { EmptyState } from '@/components/empty-state'
 import Image from 'next/image'
+import { z } from 'zod'
 
 const postSchema = z.object({
   content: z.string().min(1, 'Post cannot be empty'),
 })
 
-const commentSchema = z.object({
-  content: z.string().min(1, 'Comment cannot be empty'),
-})
-
 type PostForm = z.infer<typeof postSchema>
 
-interface Profile {
-  full_name: string | null
-  avatar_url: string | null
-}
-
-interface Comment {
-  id: string
-  post_id: string
-  author_id: string
-  content: string
-  created_at: string
-  profiles: Profile
-}
-
-interface Post {
-  id: string
-  family_id: string
-  author_id: string
-  content: string
-  created_at: string
-  profiles: Profile
-  comments: Comment[]
-}
-
 export default function FeedPage() {
-  const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [posts, setPosts] = useState<Post[]>([])
-  const [familyId, setFamilyId] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
@@ -56,128 +24,27 @@ export default function FeedPage() {
     resolver: zodResolver(postSchema),
     defaultValues: { content: '' },
   })
-  // Manage comment input state per post
-  const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
-  const [commentSubmitting, setCommentSubmitting] = useState<
-    Record<string, boolean>
-  >({})
-  const [commentErrors, setCommentErrors] = useState<
-    Record<string, string | null>
-  >({})
-
-  useEffect(() => {
-    async function fetchFeed() {
-      setLoading(true)
-      setError(null)
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-      if (userError || !user) {
-        setError('Not authenticated')
-        setLoading(false)
-        return
-      }
-      // Get user's family membership (use maybeSingle for 0/1 row)
-      const { data: member } = await supabase
-        .from('family_members')
-        .select('family_id')
-        .eq('profile_id', user.id)
-        .maybeSingle()
-      if (!member) {
-        setError('You are not in a family')
-        setLoading(false)
-        return
-      }
-      setFamilyId(member.family_id)
-      // Get posts for family
-      const { data: postsData, error: postsError } = await supabase
-        .from('posts')
-        .select(
-          '*, profiles(full_name, avatar_url), comments(id, content, created_at, author_id, profiles(full_name, avatar_url))'
-        )
-        .eq('family_id', member.family_id)
-        .order('created_at', { ascending: false })
-      if (postsError) {
-        setError('Could not load posts')
-        setPosts([])
-      } else {
-        setPosts(postsData)
-      }
-      setLoading(false)
-    }
-    fetchFeed()
-  }, [supabase, reset])
-
-  const onPost = async (values: PostForm) => {
-    setError(null)
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user || !familyId) {
-      setError('Not authenticated or not in a family')
-      setLoading(false)
-      return
-    }
-    const { error: postError } = await supabase.from('posts').insert({
-      family_id: familyId,
-      author_id: user.id,
-      content: values.content,
-    })
-    if (postError) {
-      setError('Failed to post')
-    } else {
-      reset()
-    }
-    setLoading(false)
-  }
-
-  const handleCommentInput = (postId: string, value: string) => {
-    setCommentInputs((prev) => ({ ...prev, [postId]: value }))
-  }
-
-  const onComment = async (postId: string) => {
-    setCommentErrors((prev) => ({ ...prev, [postId]: null }))
-    setCommentSubmitting((prev) => ({ ...prev, [postId]: true }))
-    const content = commentInputs[postId] || ''
-    // Validate comment
-    const result = commentSchema.safeParse({ content })
-    if (!result.success) {
-      setCommentErrors((prev) => ({
-        ...prev,
-        [postId]: result.error.errors[0].message,
-      }))
-      setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
-      return
-    }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setError('Not authenticated')
-      setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
-      return
-    }
-    const { error: commentError } = await supabase.from('comments').insert({
-      post_id: postId,
-      author_id: user.id,
-      content,
-    })
-    if (commentError) {
-      setCommentErrors((prev) => ({ ...prev, [postId]: 'Failed to comment' }))
-    } else {
-      setCommentInputs((prev) => ({ ...prev, [postId]: '' }))
-    }
-    setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
-  }
+  const {
+    loading,
+    error,
+    posts,
+    commentInputs,
+    commentSubmitting,
+    commentErrors,
+    onPost,
+    handleCommentInput,
+    onComment,
+  } = useFeed(reset)
 
   return (
     <div className="max-w-2xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Family Feed</h1>
-      {loading && <div className="text-gray-500">Loading...</div>}
+      {loading && <LoadingState message="Loading feed..." />}
       {error && <div className="text-red-500 mb-2">{error}</div>}
-      <form onSubmit={handleSubmit(onPost)} className="mb-6 space-y-2">
+      <form
+        onSubmit={handleSubmit((values) => onPost(values, reset))}
+        className="mb-6 space-y-2"
+      >
         <textarea
           {...register('content')}
           className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
@@ -196,6 +63,9 @@ export default function FeedPage() {
         </button>
       </form>
       <div className="space-y-6">
+        {!loading && posts.length === 0 && (
+          <EmptyState message="No posts yet. Start the conversation!" />
+        )}
         {posts.map((post) => (
           <div key={post.id} className="border rounded p-4">
             <div className="flex items-center gap-2 mb-2">

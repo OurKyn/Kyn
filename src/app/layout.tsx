@@ -3,6 +3,7 @@ import './globals.css'
 import { ReactNode } from 'react'
 import { DarkModeToggle } from '../components/dark-mode-toggle'
 import { AnimatedHeader } from '../components/animated-header'
+import { ErrorBoundaryWrapper } from '../components/error-boundary'
 
 export const metadata: Metadata = {
   title: 'Kyn - Family Connection Platform',
@@ -44,7 +45,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <AnimatedHeader />
         </header>
         <main className="flex flex-col items-center justify-center min-h-[80vh] px-2 sm:px-0">
-          {children}
+          <ErrorBoundaryWrapper>{children}</ErrorBoundaryWrapper>
         </main>
       </body>
     </html>
