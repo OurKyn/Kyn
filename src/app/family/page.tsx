@@ -1,13 +1,12 @@
 'use client'
 
-import { createClient } from '@/utils/supabase/client'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
-import Image from 'next/image'
+import { useFamily } from '@/hooks/useFamily'
 import { LoadingState } from '@/components/loading-state'
 import { EmptyState } from '@/components/empty-state'
+import Image from 'next/image'
+import { z } from 'zod'
 
 const familySchema = z.object({
   familyName: z.string().min(2, 'Family name required'),
@@ -15,32 +14,7 @@ const familySchema = z.object({
 
 type FamilyForm = z.infer<typeof familySchema>
 
-interface Profile {
-  full_name: string | null
-  avatar_url: string | null
-}
-
-interface Family {
-  id: string
-  name: string
-  created_by: string
-  created_at: string
-}
-
-interface FamilyMember {
-  id: string
-  family_id: string
-  profile_id: string
-  role: string
-  joined_at: string
-  profiles: Profile
-}
-
 export default function FamilyPage() {
-  const supabase = createClient()
-  const [error, setError] = useState<string | null>(null)
-  const [family, setFamily] = useState<Family | null>(null)
-  const [members, setMembers] = useState<FamilyMember[]>([])
   const {
     register,
     handleSubmit,
@@ -50,82 +24,15 @@ export default function FamilyPage() {
     resolver: zodResolver(familySchema),
     defaultValues: { familyName: '' },
   })
-
-  useEffect(() => {
-    const fetchFamily = async () => {
-      setError(null)
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-      if (userError || !user) {
-        setError('Not authenticated')
-        return
-      }
-      // Get the user's family membership (use maybeSingle for 0/1 row)
-      const { data: member, error: memberError } = await supabase
-        .from('family_members')
-        .select('*, families(*), profiles(full_name, avatar_url)')
-        .eq('profile_id', user.id)
-        .maybeSingle()
-      if (memberError) {
-        setError('Could not load family membership')
-        setFamily(null)
-        setMembers([])
-        return
-      }
-      if (!member) {
-        setFamily(null)
-        setMembers([])
-        return
-      }
-      setFamily(member.families)
-      // Get all members of the family
-      const { data: allMembers, error: allMembersError } = await supabase
-        .from('family_members')
-        .select('*, profiles(full_name, avatar_url)')
-        .eq('family_id', member.family_id)
-      if (allMembersError) {
-        setError('Could not load family members')
-        setMembers([])
-      } else {
-        setMembers(allMembers)
-      }
-    }
-    fetchFamily()
-  }, [supabase, reset])
-
-  const onCreate = async (values: FamilyForm) => {
-    setError(null)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setError('Not authenticated')
-      return
-    }
-    // Create family
-    const { data: newFamily, error: createError } = await supabase
-      .from('families')
-      .insert({ name: values.familyName, created_by: user.id })
-      .select()
-      .single()
-    if (createError) {
-      setError('Failed to create family')
-      return
-    }
-    // Add user as member
-    await supabase
-      .from('family_members')
-      .insert({ family_id: newFamily.id, profile_id: user.id, role: 'admin' })
-    setFamily(newFamily)
-  }
+  const { loading, error, family, members, onCreate } = useFamily(reset)
 
   return (
     <div className="max-w-md mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Family Management</h1>
       {error && <div className="text-red-500 mb-2">{error}</div>}
-      {!family && (
+      {loading ? (
+        <LoadingState />
+      ) : !family ? (
         <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
           <div>
             <label
@@ -155,8 +62,7 @@ export default function FamilyPage() {
             Create Family
           </button>
         </form>
-      )}
-      {family && (
+      ) : (
         <div>
           <div className="mb-4">
             <h2 className="text-lg font-semibold">Family: {family.name}</h2>
@@ -179,7 +85,9 @@ export default function FamilyPage() {
                       />
                     )}
                     <span>{m.profiles?.full_name || 'Unknown'}</span>
-                    <span className="ml-2 text-xs text-gray-500">({m.role})</span>
+                    <span className="ml-2 text-xs text-gray-500">
+                      ({m.role})
+                    </span>
                   </li>
                 ))
               )}
