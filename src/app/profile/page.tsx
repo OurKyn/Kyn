@@ -1,24 +1,17 @@
 'use client'
 
-import { createClient } from '@/utils/supabase/client'
-import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, useState } from 'react'
+import { useProfile, ProfileForm } from '@/hooks/useProfile'
 import { LoadingState } from '@/components/loading-state'
-import { EmptyState } from '@/components/empty-state'
+import { z } from 'zod'
 
 const profileSchema = z.object({
   fullName: z.string().min(2, 'Name required'),
   avatarUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 })
 
-type ProfileForm = z.infer<typeof profileSchema>
-
 export default function ProfilePage() {
-  const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const {
     register,
     handleSubmit,
@@ -28,61 +21,7 @@ export default function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: { fullName: '', avatarUrl: '' },
   })
-
-  useEffect(() => {
-    async function fetchProfile() {
-      setLoading(true)
-      setError(null)
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-      if (userError || !user) {
-        setError('Not authenticated')
-        setLoading(false)
-        return
-      }
-      const { data, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
-      if (profileError) {
-        setError('Could not load profile')
-      } else {
-        reset({
-          fullName: data.full_name || '',
-          avatarUrl: data.avatar_url || '',
-        })
-      }
-      setLoading(false)
-    }
-    fetchProfile()
-  }, [reset, supabase])
-
-  const onSubmit = async (values: ProfileForm) => {
-    setError(null)
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setError('Not authenticated')
-      setLoading(false)
-      return
-    }
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({
-        full_name: values.fullName,
-        avatar_url: values.avatarUrl || null,
-      })
-      .eq('user_id', user.id)
-    if (updateError) {
-      setError('Failed to update profile')
-    }
-    setLoading(false)
-  }
+  const { loading, error, onSubmit } = useProfile(reset)
 
   return (
     <div className="max-w-md mx-auto py-8">
