@@ -35,7 +35,7 @@ export default function FeedPage() {
     onPost,
     handleCommentInput,
     onComment,
-  } = useFeed(reset)
+  } = useFeed()
 
   return (
     <div className="max-w-2xl mx-auto py-8">
@@ -43,7 +43,7 @@ export default function FeedPage() {
       {loading && <LoadingState message="Loading feed..." />}
       {error && <div className="text-red-500 mb-2">{error.message}</div>}
       <form
-        onSubmit={handleSubmit((values) => onPost(values))}
+        onSubmit={handleSubmit((values) => onPost(values, reset))}
         className="mb-6 space-y-2"
       >
         <textarea

@@ -43,20 +43,42 @@ export function useFeed() {
   })
   const user = userQuery.data
 
-  // Get family membership
-  const memberQuery = useQuery({
-    queryKey: ['family', user?.id],
+  // Get profile for current user
+  const profileQuery = useQuery({
+    queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user) throw new Error('Not authenticated')
       const { data, error } = await supabase
-        .from('family_members')
-        .select('family_id')
-        .eq('profile_id', user.id)
-        .maybeSingle()
-      if (error || !data) throw new Error('You are not in a family')
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      if (error || !data) {
+        console.error('Profile not found for user', user.id, error)
+        throw new Error('Profile not found')
+      }
       return data
     },
     enabled: !!user,
+  })
+  const profile = profileQuery.data
+
+  // Get family membership
+  const memberQuery = useQuery({
+    queryKey: ['family', profile?.id],
+    queryFn: async () => {
+      if (!profile) throw new Error('Profile not loaded')
+      const { data: members, error } = await supabase
+        .from('family_members')
+        .select('family_id, joined_at')
+        .eq('profile_id', profile.id)
+        .order('joined_at', { ascending: false })
+      if (error || !members || members.length === 0)
+        throw new Error('You are not in a family')
+      // Pick the most recently joined family
+      return members[0]
+    },
+    enabled: !!profile,
   })
   const member = memberQuery.data
 
@@ -81,11 +103,11 @@ export function useFeed() {
 
   // Post a new post
   const onPost = async (values: { content: string }, resetForm: () => void) => {
-    if (!user || !member?.family_id)
+    if (!user || !member?.family_id || !profile?.id)
       throw new Error('Not authenticated or not in a family')
     const { error: postError } = await supabase.from('posts').insert({
       family_id: member.family_id,
-      author_id: user.id,
+      author_id: profile.id,
       content: values.content,
     })
     if (postError) throw new Error('Failed to post')
@@ -112,14 +134,14 @@ export function useFeed() {
       setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
       return
     }
-    if (!user) {
+    if (!user || !profile?.id) {
       setCommentErrors((prev) => ({ ...prev, [postId]: 'Not authenticated' }))
       setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
       return
     }
     const { error: commentError } = await supabase.from('comments').insert({
       post_id: postId,
-      author_id: user.id,
+      author_id: profile.id,
       content,
     })
     if (commentError) {
