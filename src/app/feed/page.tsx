@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useFeed } from '@/hooks/useFeed'
+import type { Comment } from '@/hooks/useFeed'
 import { LoadingState } from '@/components/loading-state'
 import { EmptyState } from '@/components/empty-state'
 import Image from 'next/image'
@@ -40,9 +41,9 @@ export default function FeedPage() {
     <div className="max-w-2xl mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Family Feed</h1>
       {loading && <LoadingState message="Loading feed..." />}
-      {error && <div className="text-red-500 mb-2">{error}</div>}
+      {error && <div className="text-red-500 mb-2">{error.message}</div>}
       <form
-        onSubmit={handleSubmit((values) => onPost(values, reset))}
+        onSubmit={handleSubmit((values) => onPost(values))}
         className="mb-6 space-y-2"
       >
         <textarea
@@ -63,15 +64,15 @@ export default function FeedPage() {
         </button>
       </form>
       <div className="space-y-6">
-        {!loading && posts.length === 0 && (
+        {!loading && posts?.length === 0 && (
           <EmptyState message="No posts yet. Start the conversation!" />
         )}
-        {posts.map((post) => (
+        {posts?.map((post) => (
           <div key={post.id} className="border rounded p-4">
             <div className="flex items-center gap-2 mb-2">
               {post.profiles?.avatar_url && (
                 <Image
-                  src={post.profiles.avatar_url}
+                  src={post.profiles?.avatar_url}
                   alt=""
                   width={32}
                   height={32}
@@ -89,7 +90,7 @@ export default function FeedPage() {
             <div className="ml-4">
               <h4 className="font-medium text-sm mb-1">Comments</h4>
               <ul className="space-y-1 mb-2">
-                {post.comments?.map((c) => (
+                {post.comments?.map((c: Comment) => (
                   <li key={c.id} className="flex items-center gap-2">
                     {c.profiles?.avatar_url && (
                       <Image

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/utils/supabase/client'
 
 export interface ProfileForm {
@@ -8,53 +8,41 @@ export interface ProfileForm {
 
 export function useProfile(reset: (values: ProfileForm) => void) {
   const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
-  const loadProfile = async () => {
-    setLoading(true)
-    setError(null)
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-    if (userError || !user) {
-      setError('Not authenticated')
-      setLoading(false)
-      return
-    }
-    const { data, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-    if (profileError) {
-      setError('Could not load profile')
-    } else {
+  // Get user
+  const userQuery = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data?.user) throw new Error('Not authenticated')
+      return data.user
+    },
+  })
+  const user = userQuery.data
+
+  // Get profile
+  const profileQuery = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user) throw new Error('Not authenticated')
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+      if (profileError) throw new Error('Could not load profile')
       reset({
         fullName: data.full_name || '',
         avatarUrl: data.avatar_url || '',
       })
-    }
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    loadProfile()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reset, supabase])
+      return data
+    },
+    enabled: !!user,
+  })
 
   const onSubmit = async (values: ProfileForm) => {
-    setError(null)
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setError('Not authenticated')
-      setLoading(false)
-      return
-    }
+    if (!user) throw new Error('Not authenticated')
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -62,17 +50,14 @@ export function useProfile(reset: (values: ProfileForm) => void) {
         avatar_url: values.avatarUrl || null,
       })
       .eq('user_id', user.id)
-    if (updateError) {
-      setError('Failed to update profile')
-    }
-    setLoading(false)
+    if (updateError) throw new Error('Failed to update profile')
+    queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
   }
 
   return {
-    loading,
-    error,
+    isLoading: userQuery.isLoading || profileQuery.isLoading,
+    error: userQuery.error || profileQuery.error,
     onSubmit,
-    loadProfile,
-    setError,
+    profile: profileQuery.data,
   }
 }

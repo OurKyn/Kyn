@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { z } from 'zod'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 const commentSchema = z.object({
   content: z.string().min(1, 'Comment cannot be empty'),
@@ -11,7 +12,7 @@ interface Profile {
   avatar_url: string | null
 }
 
-interface Comment {
+export interface Comment {
   id: string
   post_id: string
   author_id: string
@@ -20,22 +21,9 @@ interface Comment {
   profiles: Profile
 }
 
-interface Post {
-  id: string
-  family_id: string
-  author_id: string
-  content: string
-  created_at: string
-  profiles: Profile
-  comments: Comment[]
-}
-
-export function useFeed(reset: () => void) {
+export function useFeed() {
   const supabase = createClient()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [posts, setPosts] = useState<Post[]>([])
-  const [familyId, setFamilyId] = useState<string | null>(null)
+  const queryClient = useQueryClient()
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({})
   const [commentSubmitting, setCommentSubmitting] = useState<
     Record<string, boolean>
@@ -44,76 +32,73 @@ export function useFeed(reset: () => void) {
     Record<string, string | null>
   >({})
 
-  useEffect(() => {
-    const fetchFeed = async () => {
-      setLoading(true)
-      setError(null)
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-      if (userError || !user) {
-        setError('Not authenticated')
-        setLoading(false)
-        return
-      }
-      const { data: member } = await supabase
+  // Get user
+  const userQuery = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.getUser()
+      if (error || !data?.user) throw new Error('Not authenticated')
+      return data.user
+    },
+  })
+  const user = userQuery.data
+
+  // Get family membership
+  const memberQuery = useQuery({
+    queryKey: ['family', user?.id],
+    queryFn: async () => {
+      if (!user) throw new Error('Not authenticated')
+      const { data, error } = await supabase
         .from('family_members')
         .select('family_id')
         .eq('profile_id', user.id)
         .maybeSingle()
-      if (!member) {
-        setError('You are not in a family')
-        setLoading(false)
-        return
-      }
-      setFamilyId(member.family_id)
-      const { data: postsData, error: postsError } = await supabase
+      if (error || !data) throw new Error('You are not in a family')
+      return data
+    },
+    enabled: !!user,
+  })
+  const member = memberQuery.data
+
+  // Get posts
+  const postsQuery = useQuery({
+    queryKey: ['posts', member?.family_id],
+    queryFn: async () => {
+      if (!member?.family_id) throw new Error('No family ID')
+      const { data, error } = await supabase
         .from('posts')
         .select(
           '*, profiles(full_name, avatar_url), comments(id, content, created_at, author_id, profiles(full_name, avatar_url))'
         )
         .eq('family_id', member.family_id)
         .order('created_at', { ascending: false })
-      if (postsError) {
-        setError('Could not load posts')
-        setPosts([])
-      } else {
-        setPosts(postsData)
-      }
-      setLoading(false)
-    }
-    fetchFeed()
-  }, [supabase, reset])
+      if (error) throw new Error('Failed to fetch posts')
+      return data
+    },
+    enabled: !!member?.family_id,
+  })
+  const posts = postsQuery.data
 
+  // Post a new post
   const onPost = async (values: { content: string }, resetForm: () => void) => {
-    setError(null)
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user || !familyId) {
-      setError('Not authenticated or not in a family')
-      setLoading(false)
-      return
-    }
+    if (!user || !member?.family_id)
+      throw new Error('Not authenticated or not in a family')
     const { error: postError } = await supabase.from('posts').insert({
-      family_id: familyId,
+      family_id: member.family_id,
       author_id: user.id,
       content: values.content,
     })
-    if (postError) {
-      setError('Failed to post')
-    } else {
-      resetForm()
-    }
-    setLoading(false)
+    if (postError) throw new Error('Failed to post')
+    resetForm()
+    queryClient.invalidateQueries({ queryKey: ['posts', member.family_id] })
   }
 
+  // Handle comment input
   const handleCommentInput = (postId: string, value: string) => {
     setCommentInputs((prev) => ({ ...prev, [postId]: value }))
   }
 
+  // Post a comment
   const onComment = async (postId: string) => {
     setCommentErrors((prev) => ({ ...prev, [postId]: null }))
     setCommentSubmitting((prev) => ({ ...prev, [postId]: true }))
@@ -127,11 +112,8 @@ export function useFeed(reset: () => void) {
       setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
       return
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
     if (!user) {
-      setError('Not authenticated')
+      setCommentErrors((prev) => ({ ...prev, [postId]: 'Not authenticated' }))
       setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
       return
     }
@@ -144,13 +126,15 @@ export function useFeed(reset: () => void) {
       setCommentErrors((prev) => ({ ...prev, [postId]: 'Failed to comment' }))
     } else {
       setCommentInputs((prev) => ({ ...prev, [postId]: '' }))
+      queryClient.invalidateQueries({ queryKey: ['posts', member?.family_id] })
     }
     setCommentSubmitting((prev) => ({ ...prev, [postId]: false }))
   }
 
   return {
-    loading,
-    error,
+    loading:
+      postsQuery.isLoading || memberQuery.isLoading || userQuery.isLoading,
+    error: postsQuery.error || memberQuery.error || userQuery.error,
     posts,
     commentInputs,
     commentSubmitting,
