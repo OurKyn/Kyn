@@ -6,6 +6,8 @@ import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AuthForm } from '@/components/auth-form'
+import { LoadingState } from '@/components/loading-state'
+import { EmptyState } from '@/components/empty-state'
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -55,22 +57,28 @@ export default function LoginPage() {
       >
         Sign in to Kyn
       </motion.h2>
-      <AuthForm
-        schema={loginSchema}
-        onSubmit={handleLogin}
-        buttonText={loading ? 'Signing in...' : 'Sign In'}
-      />
-      {error && <div className="text-red-600 text-sm">{error}</div>}
-      {success && <div className="text-green-600 text-sm">{success}</div>}
-      <p className="text-center text-sm">
-        Don&apos;t have an account?{' '}
-        <a
-          href="/auth/register"
-          className="text-brand-accent hover:underline"
-        >
-          Register
-        </a>
-      </p>
+      {loading ? (
+        <LoadingState message="Signing in..." />
+      ) : (
+        <>
+          <AuthForm
+            schema={loginSchema}
+            onSubmit={handleLogin}
+            buttonText={loading ? 'Signing in...' : 'Sign In'}
+          />
+          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {success && <div className="text-green-600 text-sm">{success}</div>}
+          <p className="text-center text-sm">
+            Don&apos;t have an account?{' '}
+            <a
+              href="/auth/register"
+              className="text-brand-accent hover:underline"
+            >
+              Register
+            </a>
+          </p>
+        </>
+      )}
     </motion.div>
   )
 }
