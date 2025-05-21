@@ -677,7 +677,7 @@ graph TD
 - [x] Family management (create/join family, invite members)
 - [x] User profile management (edit profile, avatar upload)
 - [x] Direct messaging (private conversations)
-- [ ] Photo albums (create, view, upload)
+- [x] Photo albums (create, view, upload)
 - [ ] Task management (assign, complete tasks)
 - [ ] Events (create, view, RSVP)
 - [ ] Polls & voting

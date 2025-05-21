@@ -7,6 +7,7 @@ import {
   HomeIcon,
   LinkIcon,
 } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 
 export default function DashboardPage() {
   return (
@@ -46,9 +47,11 @@ export default function DashboardPage() {
         <DashboardCard
           href="/albums"
           icon={
-            <img
+            <Image
               src="/icons/photo-album.svg"
               alt="Albums"
+              width={40}
+              height={40}
               className="h-10 w-10 text-pink-500"
             />
           }

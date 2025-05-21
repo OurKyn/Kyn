@@ -69,7 +69,7 @@ export default function FamilyPage() {
     resolver: zodResolver(familySchema),
     defaultValues: { familyName: '' },
   })
-  const memoizedReset = useCallback(reset, [])
+  const memoizedReset = useCallback(() => reset(), [reset])
   const {
     loading,
     error,

@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { AuthForm } from '@/components/auth-form'
 import { LoadingState } from '@/components/loading-state'
-import { EmptyState } from '@/components/empty-state'
 
 const registerSchema = z.object({
   email: z.string().email('Enter a valid email'),

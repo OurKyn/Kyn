@@ -1,22 +1,29 @@
-import { useForm } from 'react-hook-form'
+import { useForm, FieldValues, SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { ZodSchema, ZodTypeAny } from 'zod'
 import { motion } from 'framer-motion'
 
-interface AuthFormProps {
-  schema: z.ZodSchema<any>
-  onSubmit: (data: any) => void
+interface AuthFormProps<T extends FieldValues> {
+  schema: ZodSchema<T>
+  onSubmit: SubmitHandler<T>
   buttonText: string
 }
 
-export function AuthForm({ schema, onSubmit, buttonText }: AuthFormProps) {
+export function AuthForm<T extends FieldValues>({
+  schema,
+  onSubmit,
+  buttonText,
+}: AuthFormProps<T>) {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
+  } = useForm<T>({
     resolver: zodResolver(schema),
   })
+
+  // @ts-expect-error: shape is not always present on all Zod schemas
+  const fields = Object.keys((schema as ZodTypeAny).shape || {})
 
   return (
     <motion.form
@@ -27,7 +34,7 @@ export function AuthForm({ schema, onSubmit, buttonText }: AuthFormProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7 }}
     >
-      {Object.keys(schema.shape).map((field) => (
+      {fields.map((field) => (
         <div key={field}>
           <label htmlFor={field} className="block text-sm font-medium">
             {field.charAt(0).toUpperCase() + field.slice(1)}
@@ -42,7 +49,7 @@ export function AuthForm({ schema, onSubmit, buttonText }: AuthFormProps) {
           />
           {errors[field] && (
             <p id={`${field}-error`} className="mt-1 text-xs text-red-600">
-              {errors[field]?.message}
+              {String(errors[field]?.message)}
             </p>
           )}
         </div>
