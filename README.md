@@ -685,13 +685,6 @@ graph TD
 - [x] Family stories (record, view)
 - [x] Recipe sharing
 
-> **Note:** Profile, Family, and Feed features are now implemented and live in the MVP.
->
-> **However, there is currently no navigation or UI to access these new core features from the main app.**
-> To make these features usable, add navigation links or a dashboard/home page that allows users to access:
-> - Family Feed (`/feed`)
-> - Family Management (`/family`)
-> - User Profile (`/profile`)
 
 ### ⬜️ Integrations & Advanced
 - [ ] Video calls (LiveKit integration)

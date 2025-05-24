@@ -229,6 +229,26 @@ export default function DashboardPage() {
           title="Recipe Sharing"
           description="Share and discover family recipes."
         />
+        <DashboardCard
+          href="/weather"
+          icon={
+            <svg
+              className="h-10 w-10 text-sky-500"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="17" r="5" stroke="currentColor" />
+              <path
+                d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                stroke="currentColor"
+              />
+            </svg>
+          }
+          title="Weather Widget"
+          description="Check the weather for your location."
+        />
       </div>
     </main>
   )
