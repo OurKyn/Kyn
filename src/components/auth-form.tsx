@@ -1,4 +1,4 @@
-import { useForm, FieldValues, SubmitHandler } from 'react-hook-form'
+import { useForm, FieldValues, SubmitHandler, Path } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ZodSchema, ZodTypeAny } from 'zod'
 import { motion } from 'framer-motion'
@@ -42,7 +42,7 @@ export function AuthForm<T extends FieldValues>({
           <input
             id={field}
             type={field === 'password' ? 'password' : 'text'}
-            {...register(field)}
+            {...register(field as Path<T>)}
             className="mt-1 block w-full rounded border border-brand/20 dark:border-brand-accent/30 bg-white/70 dark:bg-brand-dark/60 shadow-sm focus:border-brand-accent focus:ring-brand-accent transition-colors"
             aria-invalid={!!errors[field]}
             aria-describedby={errors[field] ? `${field}-error` : undefined}

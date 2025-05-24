@@ -21,13 +21,19 @@ export default function ProfilePage() {
     resolver: zodResolver(profileSchema),
     defaultValues: { fullName: '', avatarUrl: '' },
   })
-  const { loading, error, onSubmit } = useProfile(reset)
+  const { isLoading, error, onSubmit } = useProfile(reset)
 
   return (
     <div className="max-w-md mx-auto py-8">
       <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
-      {loading && <LoadingState message="Loading profile..." />}
-      {error && <div className="text-red-500 mb-2">{error}</div>}
+      {isLoading && <LoadingState message="Loading profile..." />}
+      {error && (
+        <div className="text-red-500 mb-2">
+          {typeof error === 'object' && error !== null && 'message' in error
+            ? error.message
+            : String(error)}
+        </div>
+      )}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label htmlFor="fullName" className="block text-sm font-medium mb-1">
@@ -38,7 +44,7 @@ export default function ProfilePage() {
             type="text"
             {...register('fullName')}
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
-            disabled={isSubmitting || loading}
+            disabled={isSubmitting || isLoading}
           />
           {errors.fullName && (
             <p className="text-red-500 text-xs mt-1">
@@ -55,7 +61,7 @@ export default function ProfilePage() {
             type="url"
             {...register('avatarUrl')}
             className="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
-            disabled={isSubmitting || loading}
+            disabled={isSubmitting || isLoading}
           />
           {errors.avatarUrl && (
             <p className="text-red-500 text-xs mt-1">
@@ -66,7 +72,7 @@ export default function ProfilePage() {
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-          disabled={isSubmitting || loading}
+          disabled={isSubmitting || isLoading}
         >
           Save Changes
         </button>

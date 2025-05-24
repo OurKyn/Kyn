@@ -44,7 +44,9 @@ export function useFamily(reset: () => void, familyIdOverride?: string | null) {
   const [inviteQrCodeUrl, setInviteQrCodeUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!familyIdOverride) return
+    if (!familyIdOverride) {
+      return
+    }
     const fetchFamily = async () => {
       setError(null)
       setLoading(true)
@@ -117,7 +119,9 @@ export function useFamily(reset: () => void, familyIdOverride?: string | null) {
   }, [supabase, reset, familyIdOverride])
 
   useEffect(() => {
-    if (!family?.id) return
+    if (!family?.id) {
+      return
+    }
     // Subscribe to family_members changes (already present)
     const channelMembers = supabase
       .channel(`family_members_${family.id}`)
@@ -472,9 +476,9 @@ export function useFamilyMembers(familyIdOverride?: string | null) {
         (allMembers || []).map((m) => ({
           id: m.id,
           profile_id: m.profile_id,
-          full_name: m.profiles?.full_name ?? null,
-          avatar_url: m.profiles?.avatar_url ?? null,
-          email: m.profiles?.email ?? null,
+          full_name: m.profiles?.[0]?.full_name ?? null,
+          avatar_url: m.profiles?.[0]?.avatar_url ?? null,
+          email: m.profiles?.[0]?.email ?? null,
         }))
       )
       setLoading(false)

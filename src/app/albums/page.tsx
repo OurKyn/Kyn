@@ -34,13 +34,17 @@ export default function AlbumsPage() {
   const { data: albums, isLoading } = useQuery({
     queryKey: ['albums', selectedFamilyId],
     queryFn: async () => {
-      if (!selectedFamilyId) return []
+      if (!selectedFamilyId) {
+        return []
+      }
       const { data, error } = await supabase
         .from('albums')
         .select('*')
         .eq('family_id', selectedFamilyId)
         .order('created_at', { ascending: false })
-      if (error) throw new Error('Failed to fetch albums')
+      if (error) {
+        throw new Error('Failed to fetch albums')
+      }
       return data
     },
     enabled: !!selectedFamilyId,
@@ -78,7 +82,9 @@ export default function AlbumsPage() {
 
   // Real-time subscription for new albums in this family
   useEffect(() => {
-    if (!selectedFamilyId) return
+    if (!selectedFamilyId) {
+      return
+    }
     const supabase = createClient()
     // Get current user profile for comparison
     let currentProfileId: string | null = null
@@ -112,7 +118,6 @@ export default function AlbumsPage() {
           ) {
             toast('New album created', {
               description: `Album: ${payload.new.title}`,
-              type: 'post',
               id: payload.new.id,
             })
           }

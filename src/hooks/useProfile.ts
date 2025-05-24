@@ -15,7 +15,9 @@ export function useProfile(reset: (values: ProfileForm) => void) {
     queryKey: ['user'],
     queryFn: async () => {
       const { data, error } = await supabase.auth.getUser()
-      if (error || !data?.user) throw new Error('Not authenticated')
+      if (error || !data?.user) {
+        throw new Error('Not authenticated')
+      }
       return data.user
     },
   })
@@ -25,13 +27,17 @@ export function useProfile(reset: (values: ProfileForm) => void) {
   const profileQuery = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        throw new Error('Not authenticated')
+      }
       const { data, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .single()
-      if (profileError) throw new Error('Could not load profile')
+      if (profileError) {
+        throw new Error('Could not load profile')
+      }
       reset({
         fullName: data.full_name || '',
         avatarUrl: data.avatar_url || '',
@@ -42,7 +48,9 @@ export function useProfile(reset: (values: ProfileForm) => void) {
   })
 
   const onSubmit = async (values: ProfileForm) => {
-    if (!user) throw new Error('Not authenticated')
+    if (!user) {
+      throw new Error('Not authenticated')
+    }
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
@@ -50,7 +58,9 @@ export function useProfile(reset: (values: ProfileForm) => void) {
         avatar_url: values.avatarUrl || null,
       })
       .eq('user_id', user.id)
-    if (updateError) throw new Error('Failed to update profile')
+    if (updateError) {
+      throw new Error('Failed to update profile')
+    }
     queryClient.invalidateQueries({ queryKey: ['profile', user.id] })
   }
 

@@ -38,7 +38,9 @@ export function useFeed(familyId?: string | null) {
     queryKey: ['user'],
     queryFn: async () => {
       const { data, error } = await supabase.auth.getUser()
-      if (error || !data?.user) throw new Error('Not authenticated')
+      if (error || !data?.user) {
+        throw new Error('Not authenticated')
+      }
       return data.user
     },
   })
@@ -48,7 +50,9 @@ export function useFeed(familyId?: string | null) {
   const profileQuery = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        throw new Error('Not authenticated')
+      }
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
@@ -69,14 +73,17 @@ export function useFeed(familyId?: string | null) {
   const memberQuery = useQuery({
     queryKey: ['family', profile?.id],
     queryFn: async () => {
-      if (!profile) throw new Error('Profile not loaded')
+      if (!profile) {
+        throw new Error('Profile not loaded')
+      }
       const { data: members, error } = await supabase
         .from('family_members')
         .select('family_id, joined_at')
         .eq('profile_id', profile.id)
         .order('joined_at', { ascending: false })
-      if (error || !members || members.length === 0)
+      if (error || !members || members.length === 0) {
         throw new Error('You are not in a family')
+      }
       // Pick the most recently joined family
       return members[0]
     },
@@ -89,7 +96,9 @@ export function useFeed(familyId?: string | null) {
 
   // Realtime subscription for posts/comments
   useEffect(() => {
-    if (!activeFamilyId) return
+    if (!activeFamilyId) {
+      return
+    }
     const channel = supabase
       .channel(`family_feed_${activeFamilyId}`)
       .on(
@@ -135,7 +144,9 @@ export function useFeed(familyId?: string | null) {
   const postsQuery = useQuery({
     queryKey: ['posts', activeFamilyId],
     queryFn: async () => {
-      if (!activeFamilyId) throw new Error('No family ID')
+      if (!activeFamilyId) {
+        throw new Error('No family ID')
+      }
       const { data, error } = await supabase
         .from('posts')
         .select(
@@ -143,7 +154,9 @@ export function useFeed(familyId?: string | null) {
         )
         .eq('family_id', activeFamilyId)
         .order('created_at', { ascending: false })
-      if (error) throw new Error('Failed to fetch posts')
+      if (error) {
+        throw new Error('Failed to fetch posts')
+      }
       return data
     },
     enabled: !!activeFamilyId,
@@ -152,14 +165,17 @@ export function useFeed(familyId?: string | null) {
 
   // Post a new post
   const onPost = async (values: { content: string }, resetForm: () => void) => {
-    if (!user || !activeFamilyId || !profile?.id)
+    if (!user || !activeFamilyId || !profile?.id) {
       throw new Error('Not authenticated or not in a family')
+    }
     const { error: postError } = await supabase.from('posts').insert({
       family_id: activeFamilyId,
       author_id: profile.id,
       content: values.content,
     })
-    if (postError) throw new Error('Failed to post')
+    if (postError) {
+      throw new Error('Failed to post')
+    }
     resetForm()
     queryClient.invalidateQueries({ queryKey: ['posts', activeFamilyId] })
   }
@@ -203,10 +219,7 @@ export function useFeed(familyId?: string | null) {
   }
 
   return {
-    loading:
-      postsQuery.isLoading ||
-      (activeFamilyId ? false : true) ||
-      userQuery.isLoading,
+    loading: postsQuery.isLoading || !activeFamilyId || userQuery.isLoading,
     error: postsQuery.error || memberQuery.error || userQuery.error,
     posts,
     commentInputs,

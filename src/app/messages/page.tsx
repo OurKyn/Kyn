@@ -98,13 +98,15 @@ export default function MessagesPage() {
             <LoadingState message="Loading messages..." />
           ) : error ? (
             <div className="text-red-500 mb-2">
-              {error.message || error.toString()}
+              {typeof error === 'object' && error !== null && 'message' in error
+                ? error.message
+                : String(error)}
             </div>
           ) : messages?.length === 0 ? (
             <EmptyState message="No messages yet. Say hello!" />
           ) : (
             <ul className="space-y-3 max-h-64 overflow-y-auto mb-4">
-              {messages.map(
+              {(messages || []).map(
                 (msg: {
                   id: string
                   senderProfile: {

@@ -26,7 +26,9 @@ export function useMessages(
     queryKey: ['user'],
     queryFn: async () => {
       const { data, error } = await supabase.auth.getUser()
-      if (error || !data?.user) throw new Error('Not authenticated')
+      if (error || !data?.user) {
+        throw new Error('Not authenticated')
+      }
       return data.user
     },
   })
@@ -36,13 +38,17 @@ export function useMessages(
   const profileQuery = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
-      if (!user) throw new Error('Not authenticated')
+      if (!user) {
+        throw new Error('Not authenticated')
+      }
       const { data, error } = await supabase
         .from('profiles')
         .select('id')
         .eq('user_id', user.id)
         .single()
-      if (error || !data) throw new Error('Profile not found')
+      if (error || !data) {
+        throw new Error('Profile not found')
+      }
       return data
     },
     enabled: !!user,
@@ -53,7 +59,9 @@ export function useMessages(
   const messagesQuery = useQuery({
     queryKey: ['messages', familyId, profile?.id, recipientId],
     queryFn: async () => {
-      if (!profile?.id || !recipientId || !familyId) return []
+      if (!profile?.id || !recipientId || !familyId) {
+        return []
+      }
       const { data, error } = await supabase
         .from('messages')
         .select(
@@ -67,7 +75,9 @@ export function useMessages(
         )
         .eq('family_id', familyId)
         .order('created_at', { ascending: true })
-      if (error) throw new Error('Failed to fetch messages')
+      if (error) {
+        throw new Error('Failed to fetch messages')
+      }
       return data
     },
     enabled: !!profile?.id && !!recipientId && !!familyId,
@@ -103,7 +113,9 @@ export function useMessages(
 
   // Realtime subscription for new messages
   useEffect(() => {
-    if (!profile?.id || !recipientId || !familyId) return
+    if (!profile?.id || !recipientId || !familyId) {
+      return
+    }
     const channel = supabase
       .channel(`messages_${familyId}_${profile.id}_${recipientId}`)
       .on(

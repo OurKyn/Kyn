@@ -33,7 +33,9 @@ export default function AlbumDetailPage() {
         .select('*')
         .eq('id', albumId)
         .single()
-      if (error) throw new Error('Failed to fetch album')
+      if (error) {
+        throw new Error('Failed to fetch album')
+      }
       return data
     },
     enabled: !!albumId,
@@ -48,7 +50,9 @@ export default function AlbumDetailPage() {
         .select('*')
         .eq('album_id', albumId)
         .order('created_at', { ascending: false })
-      if (error) throw new Error('Failed to fetch photos')
+      if (error) {
+        throw new Error('Failed to fetch photos')
+      }
       return data
     },
     enabled: !!albumId,
@@ -101,7 +105,9 @@ export default function AlbumDetailPage() {
 
   // Real-time subscription for new photos in this album
   useEffect(() => {
-    if (!albumId) return
+    if (!albumId) {
+      return
+    }
     const supabase = createClient()
     // Get current user profile for comparison
     let currentProfileId: string | null = null
@@ -135,7 +141,6 @@ export default function AlbumDetailPage() {
           ) {
             toast('New photo uploaded', {
               description: 'A new photo was added to this album.',
-              type: 'post',
               id: payload.new.id,
             })
           }

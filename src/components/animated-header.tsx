@@ -68,7 +68,9 @@ function notificationReducer(
   switch (action.type) {
     case 'add':
       // Avoid duplicates
-      if (state.some((n) => n.id === action.notification.id)) return state
+      if (state.some((n) => n.id === action.notification.id)) {
+        return state
+      }
       return [action.notification, ...state]
     case 'markRead':
       return state.map((n) => (n.id === action.id ? { ...n, read: true } : n))
