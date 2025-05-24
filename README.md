@@ -684,15 +684,19 @@ graph TD
 - [x] Family tree visualization
 - [x] Family stories (record, view)
 - [x] Recipe sharing
+- [x] games & trivia
+- [x] familiy health/fitness
+- [x] family medical history
+- [x] video calls
 
 
-### ⬜️ Integrations & Advanced
-- [ ] Video calls (LiveKit integration)
-- [ ] Weather widget (OpenWeather API)
+### ✅ Integrations & Advanced
+- [x] Video calls (LiveKit integration)
+- [x] Weather widget (OpenWeather API)
 - [ ] Newsletter generator (AI)
 - [ ] Subscription management (Stripe)
 - [ ] Email notifications (Resend)
-- [ ] Maps/location (Google Maps API)
+- [x] Maps/location (Google Maps API) — In progress. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in your `.env` file for local development.
 
 ### ⬜️ Testing & Polish
 - [ ] Unit/integration tests (Jest, React Testing Library)

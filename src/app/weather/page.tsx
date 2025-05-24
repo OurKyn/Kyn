@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { LoadingState } from '@/components/loading-state'
 import { EmptyState } from '@/components/empty-state'
+import Image from 'next/image'
 
 const OPENWEATHER_API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || ''
 
@@ -13,7 +14,9 @@ function fetchWeather(city: string) {
       city
     )}&units=metric&appid=${OPENWEATHER_API_KEY}`
   ).then((res) => {
-    if (!res.ok) throw new Error('City not found')
+    if (!res.ok) {
+      throw new Error('City not found')
+    }
     return res.json()
   })
 }
@@ -73,11 +76,12 @@ export default function WeatherPage() {
           </div>
           <div className="flex items-center gap-3 mb-2">
             {weather.weather[0]?.icon && (
-              <img
+              <Image
                 src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`}
                 alt={weather.weather[0].description}
                 width={64}
                 height={64}
+                priority={false}
               />
             )}
             <span className="text-4xl font-bold">

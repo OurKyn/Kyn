@@ -13,10 +13,14 @@
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^5.0.1",
+    "@livekit/components-react": "^2.9.9",
+    "@livekit/components-styles": "^1.1.6",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.5",
     "@tanstack/react-query": "^5.76.1",
     "framer-motion": "^12.12.1",
+    "livekit-client": "^2.0.0",
+    "livekit-server-sdk": "^2.13.0",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -31,6 +35,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4.1.7",
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
