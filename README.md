@@ -682,8 +682,8 @@ graph TD
 - [x] Events (create, view, RSVP)
 - [x] Polls & voting
 - [x] Family tree visualization
-- [ ] Family stories (record, view)
-- [ ] Recipe sharing
+- [x] Family stories (record, view)
+- [x] Recipe sharing
 
 > **Note:** Profile, Family, and Feed features are now implemented and live in the MVP.
 >

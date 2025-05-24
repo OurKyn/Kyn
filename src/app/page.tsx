@@ -204,6 +204,31 @@ export default function DashboardPage() {
           title="Family Stories"
           description="Record and view family stories."
         />
+        <DashboardCard
+          href="/recipes"
+          icon={
+            <svg
+              className="h-10 w-10 text-lime-600"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M4 19c0-2.5 2-4.5 4.5-4.5S13 16.5 13 19v1H4v-1z"
+                stroke="currentColor"
+              />
+              <circle cx="8.5" cy="8.5" r="4.5" stroke="currentColor" />
+              <path
+                d="M16 7h4M18 5v4"
+                stroke="currentColor"
+                strokeLinecap="round"
+              />
+            </svg>
+          }
+          title="Recipe Sharing"
+          description="Share and discover family recipes."
+        />
       </div>
     </main>
   )
