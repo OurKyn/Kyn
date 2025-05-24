@@ -9,6 +9,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import Image from 'next/image'
+import clsx from 'clsx'
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 
@@ -84,6 +86,9 @@ export default function MapsPage() {
   )
   const [showPinForm, setShowPinForm] = useState(false)
   const [myLocationLoading, setMyLocationLoading] = useState(false)
+  const [selectedPin, setSelectedPin] = useState<FamilyPin | null>(null)
+  const [selectedMember, setSelectedMember] =
+    useState<FamilyMemberLocation | null>(null)
 
   // Pin form
   const {
@@ -163,8 +168,11 @@ export default function MapsPage() {
       })
     },
     onError: (err: unknown) => {
-      if (err instanceof Error) setError(err.message)
-      else setError('Failed to add pin')
+      if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Failed to add pin')
+      }
     },
   })
 
@@ -203,8 +211,9 @@ export default function MapsPage() {
       })
     },
     onError: (err: unknown) => {
-      if (err instanceof Error) setError(err.message)
-      else setError('Failed to update location')
+      if (err instanceof Error) {
+        setError(err.message)
+      } else setError('Failed to update location')
     },
   })
 
@@ -256,7 +265,26 @@ export default function MapsPage() {
     }
   }, [map, location])
 
-  // Show markers for family pins
+  // Focus/center map on pin/member when selected
+  useEffect(() => {
+    if (!map) return
+    if (selectedPin) {
+      map.setCenter({ lat: selectedPin.lat, lng: selectedPin.lng })
+      map.setZoom(15)
+    } else if (
+      selectedMember &&
+      selectedMember.last_lat &&
+      selectedMember.last_lng
+    ) {
+      map.setCenter({
+        lat: selectedMember.last_lat,
+        lng: selectedMember.last_lng,
+      })
+      map.setZoom(15)
+    }
+  }, [selectedPin, selectedMember, map])
+
+  // Show markers for family pins (add click handler)
   useEffect(() => {
     if (!map || !pins) {
       return
@@ -270,11 +298,9 @@ export default function MapsPage() {
           url: 'https://maps.gstatic.com/mapfiles/api-3/images/spotlight-poi-dotless2.png',
           scaledSize: new window.google.maps.Size(28, 28),
         },
+        animation: window.google.maps.Animation.DROP,
       })
-      const info = new window.google.maps.InfoWindow({
-        content: `<div><strong>${pin.title}</strong><br/>${pin.description || ''}</div>`,
-      })
-      marker.addListener('click', () => info.open(map, marker))
+      marker.addListener('click', () => setSelectedPin(pin))
       return marker
     })
     return () => {
@@ -282,7 +308,7 @@ export default function MapsPage() {
     }
   }, [map, pins])
 
-  // Show markers for family members' locations
+  // Show markers for family members' locations (add click handler)
   useEffect(() => {
     if (!map || !members) {
       return
@@ -301,12 +327,7 @@ export default function MapsPage() {
             scaledSize: new window.google.maps.Size(36, 36),
           },
         })
-
-        // <img> is required here for Google Maps InfoWindow HTML, cannot use <Image />
-        const info = new window.google.maps.InfoWindow({
-          content: `<div style='min-width:120px;display:flex;align-items:center;gap:8px;'><img src='${m.profiles?.avatar_url || ''}' alt='' style='width:32px;height:32px;border-radius:50%;'/>${m.profiles?.full_name || 'Family Member'}</div>`,
-        })
-        marker.addListener('click', () => info.open(map, marker))
+        marker.addListener('click', () => setSelectedMember(m))
         return marker
       })
     return () => {
@@ -403,56 +424,149 @@ export default function MapsPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 w-full">
+    <div className="relative max-w-2xl mx-auto py-8 w-full">
       <h1 className="text-2xl font-bold mb-4">Maps & Location</h1>
-      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
-          placeholder="Search for a place or address..."
-          aria-label="Search location"
-          disabled={searching}
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-          disabled={searching}
+      {/* Floating overlay card for controls */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-white/90 dark:bg-brand-dark/90 rounded-xl shadow-lg border p-4 flex flex-col sm:flex-row gap-2 items-center w-[95%] max-w-xl">
+        <form
+          onSubmit={handleSearch}
+          className="flex gap-2 w-full"
+          aria-label="Search location form"
         >
-          Search
-        </button>
-        <button
-          type="button"
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
-          onClick={handleMyLocation}
-          disabled={searching}
-        >
-          My Location
-        </button>
-        <button
-          type="button"
-          className="bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 disabled:opacity-50"
-          onClick={handleShareMyLocation}
-          disabled={myLocationLoading}
-        >
-          Share My Location
-        </button>
-      </form>
-      {loading || searching || pinsLoading || membersLoading ? (
-        <LoadingState message="Loading map..." />
-      ) : error ? (
-        <div className="text-red-500 mb-2">{error}</div>
-      ) : (
-        <div
-          ref={mapRef}
-          className="w-full h-96 rounded border shadow mb-4"
-          aria-label="Google Map"
-        />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300"
+            placeholder="Search for a place or address..."
+            aria-label="Search location"
+            disabled={searching}
+          />
+          <button
+            type="submit"
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+            disabled={searching}
+            aria-label="Search"
+          >
+            Search
+          </button>
+        </form>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <button
+            type="button"
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+            onClick={handleMyLocation}
+            disabled={searching}
+            aria-label="My Location"
+          >
+            My Location
+          </button>
+          <button
+            type="button"
+            className="bg-emerald-700 text-white px-4 py-2 rounded hover:bg-emerald-800 disabled:opacity-50"
+            onClick={handleShareMyLocation}
+            disabled={myLocationLoading}
+            aria-label="Share My Location"
+          >
+            Share My Location
+          </button>
+        </div>
+      </div>
+      {/* Map container with overlay padding */}
+      <div className="pt-28 pb-4">
+        {loading || searching || pinsLoading || membersLoading ? (
+          <LoadingState message="Loading map..." />
+        ) : error ? (
+          <div className="text-red-500 mb-2">{error}</div>
+        ) : (
+          <div
+            ref={mapRef}
+            className="w-full h-96 rounded border shadow mb-4"
+            aria-label="Google Map"
+          />
+        )}
+      </div>
+      {/* Pin/member details card (animated) */}
+      {(selectedPin || selectedMember) && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 animate-fade-in">
+          <div className="bg-white dark:bg-brand-dark/90 rounded-xl shadow-xl border p-6 max-w-md w-full flex flex-col gap-2">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl"
+              onClick={() => {
+                setSelectedPin(null)
+                setSelectedMember(null)
+              }}
+              aria-label="Close details"
+            >
+              ×
+            </button>
+            {selectedPin && (
+              <>
+                <div className="font-bold text-lg mb-1">
+                  {selectedPin.title}
+                </div>
+                <div className="text-sm text-gray-500 mb-1">
+                  {selectedPin.description}
+                </div>
+                <div className="text-xs text-gray-400 mb-1">
+                  Lat: {selectedPin.lat}, Lng: {selectedPin.lng}
+                </div>
+                <div className="text-xs text-gray-400">
+                  Added: {new Date(selectedPin.created_at).toLocaleString()}
+                </div>
+              </>
+            )}
+            {selectedMember && (
+              <>
+                <div className="flex items-center gap-3 mb-2">
+                  {selectedMember.profiles?.avatar_url ? (
+                    <Image
+                      src={selectedMember.profiles.avatar_url}
+                      alt={selectedMember.profiles.full_name || 'Family Member'}
+                      width={40}
+                      height={40}
+                      className="w-10 h-10 rounded-full border"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                      <svg
+                        width="24"
+                        height="24"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-semibold">
+                      {selectedMember.profiles?.full_name || 'Family Member'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Last updated:{' '}
+                      {selectedMember.last_location_updated_at
+                        ? new Date(
+                            selectedMember.last_location_updated_at
+                          ).toLocaleString()
+                        : 'Unknown'}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-400">
+                  Lat: {selectedMember.last_lat}, Lng: {selectedMember.last_lng}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       )}
-      {/* Pin form modal */}
+      {/* Pin form modal (unchanged) */}
       {showPinForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 animate-fade-in">
           <form
             onSubmit={handleSubmit((values) => addPin.mutate(values))}
             className="bg-white dark:bg-brand-dark/90 rounded-lg p-6 shadow-lg max-w-sm w-full space-y-4"
@@ -517,6 +631,7 @@ export default function MapsPage() {
           </form>
         </div>
       )}
+      {/* Family pins list (modern cards) */}
       <div className="mt-4">
         <h2 className="text-lg font-semibold mb-2">Family Pins</h2>
         {pinsLoading ? (
@@ -524,19 +639,99 @@ export default function MapsPage() {
         ) : !pins || pins.length === 0 ? (
           <EmptyState message="No pins yet. Click the map to add one!" />
         ) : (
-          <ul className="space-y-2">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {pins.map((pin: FamilyPin) => (
-              <li
+              <button
                 key={pin.id}
-                className="border rounded p-3 bg-white dark:bg-brand-dark/70"
+                type="button"
+                className={clsx(
+                  'text-left border rounded-lg p-4 bg-white dark:bg-brand-dark/70 shadow transition hover:shadow-lg focus:ring-2 focus:ring-blue-400 cursor-pointer',
+                  selectedPin?.id === pin.id && 'ring-2 ring-blue-400'
+                )}
+                onClick={() => setSelectedPin(pin)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') setSelectedPin(pin)
+                }}
+                aria-label={`Pin: ${pin.title}`}
               >
-                <div className="font-semibold">{pin.title}</div>
-                <div className="text-sm text-gray-500">{pin.description}</div>
-                <div className="text-xs text-gray-400">
+                <div className="font-semibold text-lg mb-1">{pin.title}</div>
+                <div className="text-sm text-gray-500 mb-1">
+                  {pin.description}
+                </div>
+                <div className="text-xs text-gray-400 mb-1">
                   Lat: {pin.lat}, Lng: {pin.lng}
                 </div>
-              </li>
+                <div className="text-xs text-gray-400">
+                  Added: {new Date(pin.created_at).toLocaleString()}
+                </div>
+              </button>
             ))}
+          </ul>
+        )}
+      </div>
+      {/* Family members legend/list */}
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold mb-2">
+          Family Members Live Locations
+        </h2>
+        {membersLoading ? (
+          <LoadingState message="Loading members..." />
+        ) : !members || members.length === 0 ? (
+          <EmptyState message="No live locations yet." />
+        ) : (
+          <ul className="flex flex-wrap gap-4">
+            {members
+              .filter((m) => m.last_lat && m.last_lng)
+              .map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={clsx(
+                    'flex items-center gap-2 border rounded-lg px-3 py-2 bg-white dark:bg-brand-dark/70 shadow cursor-pointer transition hover:shadow-lg focus:ring-2 focus:ring-blue-400',
+                    selectedMember?.id === m.id && 'ring-2 ring-blue-400'
+                  )}
+                  onClick={() => setSelectedMember(m)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') setSelectedMember(m)
+                  }}
+                  aria-label={`Member: ${m.profiles?.full_name || 'Family Member'}`}
+                >
+                  {m.profiles?.avatar_url ? (
+                    <Image
+                      src={m.profiles.avatar_url}
+                      alt={m.profiles.full_name || 'Family Member'}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full border"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                      <svg
+                        width="20"
+                        height="20"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="currentColor"
+                          d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"
+                        />
+                      </svg>
+                    </div>
+                  )}
+                  <div>
+                    <div className="font-semibold text-sm">
+                      {m.profiles?.full_name || 'Family Member'}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      Last updated:{' '}
+                      {m.last_location_updated_at
+                        ? new Date(m.last_location_updated_at).toLocaleString()
+                        : 'Unknown'}
+                    </div>
+                  </div>
+                </button>
+              ))}
           </ul>
         )}
       </div>
