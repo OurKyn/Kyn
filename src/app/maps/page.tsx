@@ -213,7 +213,9 @@ export default function MapsPage() {
     onError: (err: unknown) => {
       if (err instanceof Error) {
         setError(err.message)
-      } else setError('Failed to update location')
+      } else {
+        setError('Failed to update location')
+      }
     },
   })
 
@@ -267,7 +269,9 @@ export default function MapsPage() {
 
   // Focus/center map on pin/member when selected
   useEffect(() => {
-    if (!map) return
+    if (!map) {
+      return
+    }
     if (selectedPin) {
       map.setCenter({ lat: selectedPin.lat, lng: selectedPin.lng })
       map.setZoom(15)

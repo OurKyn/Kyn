@@ -25,13 +25,17 @@ function useCurrentUserProfile() {
     queryFn: async () => {
       const supabase = createClient()
       const { data: userData, error: userError } = await supabase.auth.getUser()
-      if (userError || !userData?.user) throw new Error('Not authenticated')
+      if (userError || !userData?.user) {
+        throw new Error('Not authenticated')
+      }
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userData.user.id)
         .single()
-      if (profileError || !profile) throw new Error('Profile not found')
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
       return { ...profile, email: userData.user.email }
     },
   })
@@ -61,7 +65,9 @@ export default function VideoPage() {
 
   useEffect(() => {
     let mounted = true
-    if (!roomName || !username) return
+    if (!roomName || !username) {
+      return
+    }
     setConnecting(true)
     setError(null)
     fetch(
@@ -69,7 +75,9 @@ export default function VideoPage() {
     )
       .then((res) => res.json())
       .then(async (data) => {
-        if (!mounted) return
+        if (!mounted) {
+          return
+        }
         if (data.token) {
           await room.connect(LIVEKIT_URL, data.token)
           setToken(data.token)
@@ -165,12 +173,13 @@ function VideoRoomUI({
   const [handRaised, setHandRaised] = useState(false)
   const { send, chatMessages } = useChat()
   const handleRaiseHand = () => {
-    send({ message: '✋', metadata: { type: 'handraise', user: username } })
+    send(`HANDRAISE:${username}`)
     setHandRaised(true)
     setTimeout(() => setHandRaised(false), 3000)
   }
   const handRaiseNotices = chatMessages.filter(
-    (msg) => msg.metadata?.type === 'handraise'
+    (msg) =>
+      typeof msg.message === 'string' && msg.message.startsWith('HANDRAISE:')
   )
 
   return (
@@ -180,7 +189,7 @@ function VideoRoomUI({
     >
       {/* Kyn custom header */}
       <div className="absolute top-0 left-0 w-full flex items-center gap-3 bg-gradient-to-r from-brand via-brand-accent to-brand-dark text-white px-6 py-3 z-10">
-        <Image src="/kyn-logo.svg" alt="Kyn" width={32} height={32} />
+        <Image src="/kyn-logo.png" alt="Kyn" width={32} height={32} />
         <span className="font-bold text-lg">Kyn Video Room: {roomName}</span>
         <span className="ml-auto flex items-center gap-2">
           <Image
@@ -196,8 +205,11 @@ function VideoRoomUI({
       {/* Hand raise notification */}
       {handRaiseNotices.length > 0 && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-yellow-200 text-yellow-900 px-4 py-2 rounded shadow z-20 animate-bounce">
-          {handRaiseNotices[handRaiseNotices.length - 1].metadata.user} raised
-          their hand ✋
+          {handRaiseNotices[handRaiseNotices.length - 1].message.replace(
+            'HANDRAISE:',
+            ''
+          )}{' '}
+          raised their hand ✋
         </div>
       )}
       <div className="pt-16 h-full flex flex-col">
