@@ -114,6 +114,45 @@ export default function DashboardPage() {
           title="Events"
           description="Create, view, and RSVP to family events."
         />
+        <DashboardCard
+          href="/polls"
+          icon={
+            <svg
+              className="h-10 w-10 text-pink-600"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <rect
+                x="4"
+                y="10"
+                width="4"
+                height="8"
+                rx="1"
+                stroke="currentColor"
+              />
+              <rect
+                x="10"
+                y="6"
+                width="4"
+                height="12"
+                rx="1"
+                stroke="currentColor"
+              />
+              <rect
+                x="16"
+                y="3"
+                width="4"
+                height="15"
+                rx="1"
+                stroke="currentColor"
+              />
+            </svg>
+          }
+          title="Polls & Voting"
+          description="Create polls and vote as a family."
+        />
       </div>
     </main>
   )

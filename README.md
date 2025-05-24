@@ -679,7 +679,7 @@ graph TD
 - [x] Direct messaging (private conversations)
 - [x] Photo albums (create, view, upload)
 - [x] Task management (assign, complete tasks)
-- [ ] Events (create, view, RSVP)
+- [x] Events (create, view, RSVP)
 - [ ] Polls & voting
 - [ ] Family tree visualization
 - [ ] Family stories (record, view)
