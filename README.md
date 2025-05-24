@@ -678,7 +678,7 @@ graph TD
 - [x] User profile management (edit profile, avatar upload)
 - [x] Direct messaging (private conversations)
 - [x] Photo albums (create, view, upload)
-- [ ] Task management (assign, complete tasks)
+- [x] Task management (assign, complete tasks)
 - [ ] Events (create, view, RSVP)
 - [ ] Polls & voting
 - [ ] Family tree visualization
