@@ -24,6 +24,9 @@ export default function FamilyPage() {
   } = useUserFamilies()
   const [selectedFamilyId, setSelectedFamilyId] = useState<string | null>(null)
 
+  // Determine if the user has created a family
+  const hasCreatedFamily = families.some((f) => f.createdByMe)
+
   // Restore last selected family from localStorage, or pick first available
   useEffect(() => {
     if (families && families.length > 0) {
@@ -129,7 +132,7 @@ export default function FamilyPage() {
       {error && <div className="text-red-500 mb-2">{error}</div>}
       {loading ? (
         <LoadingState message="Loading family..." />
-      ) : !family ? (
+      ) : !hasCreatedFamily ? (
         <form onSubmit={handleSubmit(onCreate)} className="space-y-4">
           <div>
             <label
@@ -162,7 +165,7 @@ export default function FamilyPage() {
       ) : (
         <div>
           <div className="mb-4">
-            <h2 className="text-lg font-semibold">Family: {family.name}</h2>
+            <h2 className="text-lg font-semibold">Family: {family?.name}</h2>
           </div>
           {/* Invite options */}
           <div className="mb-6 space-y-4">

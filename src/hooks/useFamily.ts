@@ -624,10 +624,11 @@ export async function joinFamily(
 export function useUserFamilies() {
   const supabase = createClient()
   const [families, setFamilies] = useState<
-    Array<{ id: string; name: string; role: string }>
+    Array<{ id: string; name: string; role: string; createdByMe: boolean }>
   >([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [myProfileId, setMyProfileId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchFamilies = async () => {
@@ -650,36 +651,34 @@ export function useUserFamilies() {
         setLoading(false)
         return
       }
+      setMyProfileId(profile.id)
       // Step 1: Get all family memberships for this user
       const { data: memberships, error: memberError } = await supabase
         .from('family_members')
         .select('family_id, role')
         .eq('profile_id', profile.id)
-      console.log('DEBUG memberships', memberships)
       if (memberError) {
         setError('Could not load families')
         setLoading(false)
         return
       }
       const familyIds = (memberships || []).map((m) => m.family_id)
-      console.log('DEBUG familyIds', familyIds)
       if (!familyIds.length) {
         setFamilies([])
         setLoading(false)
         return
       }
-      // Step 2: Fetch all families by those IDs
+      // Step 2: Fetch all families by those IDs, including created_by
       const { data: familiesData, error: familiesError } = await supabase
         .from('families')
-        .select('id, name')
+        .select('id, name, created_by')
         .in('id', familyIds)
-      console.log('DEBUG familiesData', familiesData)
       if (familiesError) {
         setError('Could not load families')
         setLoading(false)
         return
       }
-      // Step 3: Merge role info
+      // Step 3: Merge role info and createdByMe
       const familiesWithRoles = (familiesData || []).map((fam) => {
         const membership = (memberships || []).find(
           (m) => m.family_id === fam.id
@@ -688,14 +687,14 @@ export function useUserFamilies() {
           id: fam.id,
           name: fam.name,
           role: membership?.role || 'member',
+          createdByMe: fam.created_by === profile.id,
         }
       })
-      console.log('DEBUG familiesWithRoles', familiesWithRoles)
       setFamilies(familiesWithRoles)
       setLoading(false)
     }
     fetchFamilies()
   }, [supabase])
 
-  return { families, loading, error }
+  return { families, loading, error, myProfileId }
 }

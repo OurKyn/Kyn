@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/client'
 import { z } from 'zod'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { useState, useEffect } from 'react'
 
 const commentSchema = z.object({
   content: z.string().min(1, 'Comment cannot be empty'),
