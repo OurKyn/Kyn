@@ -131,6 +131,27 @@ export default function WeatherPage() {
     }
   }, [recent])
 
+  // Auto-use geolocation on first load if available and not already set
+  useEffect(() => {
+    if (
+      !city &&
+      !coords &&
+      typeof window !== 'undefined' &&
+      navigator.geolocation
+    ) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude })
+          setSubmitted(true)
+        },
+        () => {
+          // Ignore error, user can still search manually
+        }
+      )
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Weather query
   const {
     data: weather,
