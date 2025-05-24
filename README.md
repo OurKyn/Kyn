@@ -681,7 +681,7 @@ graph TD
 - [x] Task management (assign, complete tasks)
 - [x] Events (create, view, RSVP)
 - [x] Polls & voting
-- [ ] Family tree visualization
+- [x] Family tree visualization
 - [ ] Family stories (record, view)
 - [ ] Recipe sharing
 

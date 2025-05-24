@@ -176,6 +176,34 @@ export default function DashboardPage() {
           title="Family Tree"
           description="Visualize your family relationships."
         />
+        <DashboardCard
+          href="/stories"
+          icon={
+            <svg
+              className="h-10 w-10 text-orange-600"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <rect
+                x="5"
+                y="4"
+                width="14"
+                height="16"
+                rx="2"
+                stroke="currentColor"
+              />
+              <path
+                d="M9 8h6M9 12h6M9 16h2"
+                stroke="currentColor"
+                strokeLinecap="round"
+              />
+            </svg>
+          }
+          title="Family Stories"
+          description="Record and view family stories."
+        />
       </div>
     </main>
   )
