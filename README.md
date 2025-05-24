@@ -680,7 +680,7 @@ graph TD
 - [x] Photo albums (create, view, upload)
 - [x] Task management (assign, complete tasks)
 - [x] Events (create, view, RSVP)
-- [ ] Polls & voting
+- [x] Polls & voting
 - [ ] Family tree visualization
 - [ ] Family stories (record, view)
 - [ ] Recipe sharing

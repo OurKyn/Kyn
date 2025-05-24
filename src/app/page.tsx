@@ -153,6 +153,29 @@ export default function DashboardPage() {
           title="Polls & Voting"
           description="Create polls and vote as a family."
         />
+        <DashboardCard
+          href="/family-tree"
+          icon={
+            <svg
+              className="h-10 w-10 text-green-700"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="12" cy="4" r="2" stroke="currentColor" />
+              <circle cx="6" cy="12" r="2" stroke="currentColor" />
+              <circle cx="18" cy="12" r="2" stroke="currentColor" />
+              <circle cx="12" cy="20" r="2" stroke="currentColor" />
+              <path
+                d="M12 6v4M12 14v4M6 14l6 6M18 14l-6 6M6 10l6-6M18 10l-6-6"
+                stroke="currentColor"
+              />
+            </svg>
+          }
+          title="Family Tree"
+          description="Visualize your family relationships."
+        />
       </div>
     </main>
   )
