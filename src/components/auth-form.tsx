@@ -44,7 +44,7 @@ export function AuthForm<T extends FieldValues>({
             type={field === 'password' ? 'password' : 'text'}
             {...register(field as Path<T>)}
             className="mt-1 block w-full rounded border border-brand/20 dark:border-brand-accent/30 bg-white/70 dark:bg-brand-dark/60 shadow-sm focus:border-brand-accent focus:ring-brand-accent transition-colors"
-            aria-invalid={!!errors[field]}
+            aria-invalid={Boolean(errors[field])}
             aria-describedby={errors[field] ? `${field}-error` : undefined}
           />
           {errors[field] && (

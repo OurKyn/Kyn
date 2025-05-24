@@ -24,7 +24,7 @@ export default function JoinPage() {
   // Check auth and parse params
   useEffect(() => {
     const supabase = createClient()
-    async function check() {
+    const check = async () => {
       setLoading(true)
       setError(null)
       const { data, error: userError } = await supabase.auth.getUser()

@@ -132,10 +132,10 @@ export function AnimatedHeader() {
     // (This is a hack; for production, use a context/provider)
     const origToast =
       (window as unknown as { __kyn_toast?: typeof toast }).__kyn_toast || toast
-    function kynToast(
+    const kynToast = (
       title: string,
       opts: { id?: string; type?: string; description?: string }
-    ) {
+    ) => {
       if (opts && opts.id && opts.type && opts.description) {
         dispatch({
           type: 'add',
@@ -154,9 +154,12 @@ export function AnimatedHeader() {
       kynToast
     ;(toast as typeof toast & { kyn?: typeof kynToast }).kyn = kynToast
     return () => {
-      ;(window as unknown as { __kyn_toast?: typeof toast }).__kyn_toast =
-        origToast
-      ;(toast as typeof toast & { kyn?: typeof kynToast }).kyn = origToast
+      const cleanup = () => {
+        ;(window as unknown as { __kyn_toast?: typeof toast }).__kyn_toast =
+          origToast
+        ;(toast as typeof toast & { kyn?: typeof kynToast }).kyn = origToast
+      }
+      cleanup()
     }
   }, [])
 
@@ -169,7 +172,7 @@ export function AnimatedHeader() {
 
   // Close dropdown on outside click
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
+    const handleClick = (e: MouseEvent) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(e.target as Node)
