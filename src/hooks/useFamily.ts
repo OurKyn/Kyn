@@ -476,9 +476,9 @@ export function useFamilyMembers(familyIdOverride?: string | null) {
         (allMembers || []).map((m) => ({
           id: m.id,
           profile_id: m.profile_id,
-          full_name: m.profiles?.[0]?.full_name ?? null,
-          avatar_url: m.profiles?.[0]?.avatar_url ?? null,
-          email: m.profiles?.[0]?.email ?? null,
+          full_name: m.profiles?.full_name ?? null,
+          avatar_url: m.profiles?.avatar_url ?? null,
+          email: m.profiles?.email ?? null,
         }))
       )
       setLoading(false)
